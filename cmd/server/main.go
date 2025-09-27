@@ -62,7 +62,7 @@ func main() {
 
 	// Setup router
 	router := setupRouter(cfg)
-	
+
 	// Setup routes
 	routes.SetupRoutes(router, projectHandler, listHandler, taskHandler)
 

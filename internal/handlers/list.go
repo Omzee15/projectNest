@@ -1,12 +1,13 @@
 package handlers
 
 import (
-	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
-	"github.com/sirupsen/logrus"
 	"lucid-lists-backend/internal/models"
 	"lucid-lists-backend/internal/services"
 	"lucid-lists-backend/internal/utils"
+
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 )
 
 type ListHandler struct {

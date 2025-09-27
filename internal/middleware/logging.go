@@ -5,16 +5,17 @@ import (
 	"io"
 	"time"
 
-	"github.com/gin-gonic/gin"
-	"github.com/gin-contrib/cors"
 	"lucid-lists-backend/pkg/logger"
+
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
 )
 
 // RequestLogging provides brief, structured request logging with debugging support
 func RequestLogging() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()
-		
+
 		// Skip OPTIONS requests - too verbose
 		if c.Request.Method == "OPTIONS" {
 			c.Next()
@@ -42,7 +43,7 @@ func RequestLogging() gin.HandlerFunc {
 		// Brief response logging
 		duration := time.Since(start)
 		statusCode := c.Writer.Status()
-		
+
 		logFields := map[string]interface{}{
 			"status":   statusCode,
 			"duration": duration.Truncate(time.Microsecond).String(),
@@ -75,13 +76,13 @@ func CORSWithLogging(allowedOrigins []string) gin.HandlerFunc {
 		AllowCredentials: false,
 		MaxAge:           12 * 3600, // 12 hours
 	}
-	
+
 	logger.WithComponent("cors").
 		WithFields(map[string]interface{}{
 			"allowed_origins": config.AllowOrigins,
 			"allowed_methods": config.AllowMethods,
 		}).
 		Info("CORS middleware initialized")
-	
+
 	return cors.New(config)
 }

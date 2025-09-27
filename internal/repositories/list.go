@@ -145,7 +145,7 @@ func (r *listRepository) PartialUpdate(ctx context.Context, uid uuid.UUID, updat
 	query := fmt.Sprintf(`
 		UPDATE list 
 		SET %s
-		WHERE list_uid = $1 AND is_active = true`, 
+		WHERE list_uid = $1 AND is_active = true`,
 		strings.Join(setParts, ", "))
 
 	result, err := r.db.Exec(ctx, query, args...)

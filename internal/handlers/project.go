@@ -45,7 +45,7 @@ func (h *ProjectHandler) GetProjects(c *gin.Context) {
 // GetProject handles GET /api/projects/:uid
 func (h *ProjectHandler) GetProject(c *gin.Context) {
 	uidParam := c.Param("uid")
-	
+
 	logger.WithComponent("project-handler").
 		WithFields(map[string]interface{}{"project_uid": uidParam}).
 		Info("Getting project with lists and tasks")
@@ -64,7 +64,7 @@ func (h *ProjectHandler) GetProject(c *gin.Context) {
 		logger.WithComponent("project-handler").
 			WithFields(map[string]interface{}{
 				"project_uid": projectUID.String(),
-				"error": err.Error(),
+				"error":       err.Error(),
 			}).
 			Error("Failed to get project")
 		utils.ErrorResponse(c, http.StatusNotFound, "Project not found")
@@ -99,7 +99,7 @@ func (h *ProjectHandler) CreateProject(c *gin.Context) {
 		logger.WithComponent("project-handler").
 			WithFields(map[string]interface{}{
 				"project_name": req.Name,
-				"error": err.Error(),
+				"error":        err.Error(),
 			}).
 			Error("Failed to create project")
 		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to create project")
@@ -108,7 +108,7 @@ func (h *ProjectHandler) CreateProject(c *gin.Context) {
 
 	logger.WithComponent("project-handler").
 		WithFields(map[string]interface{}{
-			"project_uid": project.ProjectUID.String(),
+			"project_uid":  project.ProjectUID.String(),
 			"project_name": project.Name,
 		}).
 		Info("Successfully created project")
@@ -119,7 +119,7 @@ func (h *ProjectHandler) CreateProject(c *gin.Context) {
 // UpdateProject handles PUT /api/projects/:uid
 func (h *ProjectHandler) UpdateProject(c *gin.Context) {
 	uidParam := c.Param("uid")
-	
+
 	logger.WithComponent("project-handler").
 		WithFields(map[string]interface{}{"project_uid": uidParam}).
 		Info("Updating project")
@@ -147,7 +147,7 @@ func (h *ProjectHandler) UpdateProject(c *gin.Context) {
 		logger.WithComponent("project-handler").
 			WithFields(map[string]interface{}{
 				"project_uid": projectUID.String(),
-				"error": err.Error(),
+				"error":       err.Error(),
 			}).
 			Error("Failed to update project")
 		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to update project")
@@ -164,7 +164,7 @@ func (h *ProjectHandler) UpdateProject(c *gin.Context) {
 // DeleteProject handles DELETE /api/projects/:uid
 func (h *ProjectHandler) DeleteProject(c *gin.Context) {
 	uidParam := c.Param("uid")
-	
+
 	logger.WithComponent("project-handler").
 		WithFields(map[string]interface{}{"project_uid": uidParam}).
 		Info("Deleting project")
@@ -183,7 +183,7 @@ func (h *ProjectHandler) DeleteProject(c *gin.Context) {
 		logger.WithComponent("project-handler").
 			WithFields(map[string]interface{}{
 				"project_uid": projectUID.String(),
-				"error": err.Error(),
+				"error":       err.Error(),
 			}).
 			Error("Failed to delete project")
 		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to delete project")
@@ -200,7 +200,7 @@ func (h *ProjectHandler) DeleteProject(c *gin.Context) {
 // PartialUpdateProject handles PATCH /api/projects/:uid
 func (h *ProjectHandler) PartialUpdateProject(c *gin.Context) {
 	uidParam := c.Param("uid")
-	
+
 	projectUID, err := uuid.Parse(uidParam)
 	if err != nil {
 		logger.WithComponent("project-handler").
@@ -228,10 +228,10 @@ func (h *ProjectHandler) PartialUpdateProject(c *gin.Context) {
 		logger.WithComponent("project-handler").
 			WithFields(map[string]interface{}{
 				"project_uid": projectUID.String(),
-				"error": err.Error(),
+				"error":       err.Error(),
 			}).
 			Error("Failed to partial update project")
-		
+
 		if err.Error() == "Project not found" {
 			utils.ErrorResponse(c, http.StatusNotFound, "Project not found")
 		} else if err.Error() == "No fields to update" {

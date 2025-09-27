@@ -282,7 +282,7 @@ func (r *projectRepository) PartialUpdate(ctx context.Context, uid uuid.UUID, up
 	query := fmt.Sprintf(`
 		UPDATE project 
 		SET %s
-		WHERE project_uid = $1 AND is_active = true`, 
+		WHERE project_uid = $1 AND is_active = true`,
 		strings.Join(setParts, ", "))
 
 	result, err := r.db.Exec(ctx, query, args...)
@@ -299,13 +299,13 @@ func (r *projectRepository) PartialUpdate(ctx context.Context, uid uuid.UUID, up
 
 func (r *projectRepository) GetMaxPositionByWorkspace(ctx context.Context, workspaceID int) (int, error) {
 	query := `SELECT COALESCE(MAX(position), 0) FROM project WHERE workspace_id = $1 AND is_active = true`
-	
+
 	var maxPosition int
 	err := r.db.QueryRow(ctx, query, workspaceID).Scan(&maxPosition)
 	if err != nil {
 		return 0, fmt.Errorf("failed to get max position: %w", err)
 	}
-	
+
 	return maxPosition, nil
 }
 

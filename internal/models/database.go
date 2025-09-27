@@ -10,15 +10,15 @@ import (
 // These use integer IDs internally for efficiency
 
 type Workspace struct {
-	ID          int        `db:"id"`
-	WorkspaceUID uuid.UUID `db:"workspace_uid"`
-	Name        string     `db:"name"`
-	Description *string    `db:"description"`
-	CreatedAt   time.Time  `db:"created_at"`
-	CreatedBy   *uuid.UUID `db:"created_by"`
-	UpdatedAt   *time.Time `db:"updated_at"`
-	UpdatedBy   *uuid.UUID `db:"updated_by"`
-	IsActive    bool       `db:"is_active"`
+	ID           int        `db:"id"`
+	WorkspaceUID uuid.UUID  `db:"workspace_uid"`
+	Name         string     `db:"name"`
+	Description  *string    `db:"description"`
+	CreatedAt    time.Time  `db:"created_at"`
+	CreatedBy    *uuid.UUID `db:"created_by"`
+	UpdatedAt    *time.Time `db:"updated_at"`
+	UpdatedBy    *uuid.UUID `db:"updated_by"`
+	IsActive     bool       `db:"is_active"`
 }
 
 type Project struct {

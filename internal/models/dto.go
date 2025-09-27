@@ -45,11 +45,11 @@ type ListRequest struct {
 }
 
 type ListResponse struct {
-	ListUID   uuid.UUID `json:"list_uid"`
-	Name      string    `json:"name"`
-	Color     string    `json:"color"`
-	Position  int       `json:"position"`
-	CreatedAt time.Time `json:"created_at"`
+	ListUID   uuid.UUID  `json:"list_uid"`
+	Name      string     `json:"name"`
+	Color     string     `json:"color"`
+	Position  int        `json:"position"`
+	CreatedAt time.Time  `json:"created_at"`
 	UpdatedAt *time.Time `json:"updated_at"`
 }
 

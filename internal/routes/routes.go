@@ -4,10 +4,11 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"lucid-lists-backend/internal/handlers"
 	"lucid-lists-backend/internal/middleware"
 	"lucid-lists-backend/pkg/logger"
+
+	"github.com/gin-gonic/gin"
 )
 
 // SetupRoutes configures all the routes for the application
@@ -29,7 +30,7 @@ func SetupRoutes(r *gin.Engine, projectHandler *handlers.ProjectHandler, listHan
 	{
 		// Log API group initialization
 		logger.WithComponent("router").Info("Initializing API routes")
-		
+
 		// Project routes
 		projects := api.Group("/projects")
 		{

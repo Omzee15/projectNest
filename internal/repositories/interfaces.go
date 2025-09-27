@@ -20,7 +20,7 @@ type ProjectRepository interface {
 	GetMaxPositionByWorkspace(ctx context.Context, workspaceID int) (int, error)
 }
 
-// ListRepository defines the interface for list data operations  
+// ListRepository defines the interface for list data operations
 type ListRepository interface {
 	GetByProjectID(ctx context.Context, projectID int) ([]models.List, error)
 	GetByUID(ctx context.Context, uid uuid.UUID) (*models.List, error)

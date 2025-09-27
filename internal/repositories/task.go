@@ -94,7 +94,7 @@ func (r *taskRepository) Create(ctx context.Context, task *models.Task) error {
 
 func (r *taskRepository) Update(ctx context.Context, uid uuid.UUID, task *models.Task) error {
 	now := time.Now()
-	
+
 	// Handle completion logic based on is_completed field
 	var completedAt *time.Time
 	if task.IsCompleted && task.CompletedAt == nil {
@@ -270,7 +270,7 @@ func (r *taskRepository) PartialUpdate(ctx context.Context, uid uuid.UUID, updat
 	query := fmt.Sprintf(`
 		UPDATE task 
 		SET %s
-		WHERE task_uid = $1 AND is_active = true`, 
+		WHERE task_uid = $1 AND is_active = true`,
 		strings.Join(setParts, ", "))
 
 	result, err := r.db.Exec(ctx, query, args...)
@@ -287,12 +287,12 @@ func (r *taskRepository) PartialUpdate(ctx context.Context, uid uuid.UUID, updat
 
 func (r *taskRepository) GetMaxPositionByList(ctx context.Context, listID int) (int, error) {
 	query := `SELECT COALESCE(MAX(position), 0) FROM task WHERE list_id = $1 AND is_active = true`
-	
+
 	var maxPosition int
 	err := r.db.QueryRow(ctx, query, listID).Scan(&maxPosition)
 	if err != nil {
 		return 0, fmt.Errorf("failed to get max position: %w", err)
 	}
-	
+
 	return maxPosition, nil
 }
