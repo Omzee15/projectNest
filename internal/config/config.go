@@ -59,9 +59,9 @@ func getEnv(key, defaultValue string) string {
 func getCORSOrigins() []string {
 	origins := getEnv("CORS_ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000,http://localhost:8080,http://localhost:8082,http://localhost:8081")
 	frontendPort := getEnv("FRONTEND_PORT", "")
-	
+
 	originList := strings.Split(origins, ",")
-	
+
 	// Add dynamic frontend port origin if specified
 	if frontendPort != "" {
 		dynamicOrigin := "http://localhost:" + frontendPort
@@ -77,6 +77,6 @@ func getCORSOrigins() []string {
 			originList = append(originList, dynamicOrigin)
 		}
 	}
-	
+
 	return originList
 }

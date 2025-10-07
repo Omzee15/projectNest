@@ -63,7 +63,7 @@ type TaskRequest struct {
 	Title       string     `json:"title" validate:"required,min=1,max=255"`
 	Description *string    `json:"description"`
 	Priority    *string    `json:"priority" validate:"omitempty,oneof=low medium high"`
-	Status      string     `json:"status" validate:"oneof=todo in_progress completed"`
+	Status      string     `json:"status" validate:"oneof=todo completed"`
 	Color       string     `json:"color" validate:"omitempty,len=7,startswith=#"`
 	Position    *int       `json:"position" validate:"omitempty,min=0"`
 	IsCompleted *bool      `json:"is_completed"`
@@ -115,9 +115,22 @@ type TaskUpdateRequest struct {
 	Title       *string    `json:"title,omitempty" validate:"omitempty,min=1,max=255"`
 	Description *string    `json:"description,omitempty"`
 	Priority    *string    `json:"priority,omitempty" validate:"omitempty,oneof=low medium high"`
-	Status      *string    `json:"status,omitempty" validate:"omitempty,oneof=todo in_progress completed"`
+	Status      *string    `json:"status,omitempty" validate:"omitempty,oneof=todo completed"`
 	Color       *string    `json:"color,omitempty" validate:"omitempty,len=7,startswith=#"`
 	Position    *int       `json:"position,omitempty" validate:"omitempty,min=0"`
 	IsCompleted *bool      `json:"is_completed,omitempty"`
 	DueDate     *time.Time `json:"due_date,omitempty"`
+}
+
+// Progress tracking DTOs for Phase 2
+type ProjectProgressResponse struct {
+	TotalTasks     int     `json:"total_tasks"`
+	CompletedTasks int     `json:"completed_tasks"`
+	TodoTasks      int     `json:"todo_tasks"`
+	Progress       float64 `json:"progress"`
+}
+
+type ProjectWithProgressResponse struct {
+	ProjectResponse
+	TaskStats ProjectProgressResponse `json:"task_stats"`
 }

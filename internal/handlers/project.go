@@ -248,3 +248,79 @@ func (h *ProjectHandler) PartialUpdateProject(c *gin.Context) {
 
 	utils.SuccessResponse(c, project, "Project updated successfully")
 }
+
+// GetProjectProgress handles GET /api/projects/:uid/progress
+func (h *ProjectHandler) GetProjectProgress(c *gin.Context) {
+	uidParam := c.Param("uid")
+
+	logger.WithComponent("project-handler").
+		WithFields(map[string]interface{}{"project_uid": uidParam}).
+		Info("Getting project progress")
+
+	projectUID, err := uuid.Parse(uidParam)
+	if err != nil {
+		logger.WithComponent("project-handler").
+			WithFields(map[string]interface{}{
+				"project_uid": uidParam,
+				"error":       err.Error(),
+			}).
+			Error("Invalid project UID format")
+		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid project UID format")
+		return
+	}
+
+	progress, err := h.projectService.GetProjectProgress(c.Request.Context(), projectUID)
+	if err != nil {
+		logger.WithComponent("project-handler").
+			WithFields(map[string]interface{}{
+				"project_uid": projectUID.String(),
+				"error":       err.Error(),
+			}).
+			Error("Failed to get project progress")
+
+		if err.Error() == "Project not found" {
+			utils.ErrorResponse(c, http.StatusNotFound, "Project not found")
+		} else {
+			utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to retrieve project progress")
+		}
+		return
+	}
+
+	logger.WithComponent("project-handler").
+		WithFields(map[string]interface{}{
+			"project_uid":     projectUID.String(),
+			"total_tasks":     progress.TotalTasks,
+			"completed_tasks": progress.CompletedTasks,
+			"progress":        progress.Progress,
+		}).
+		Info("Successfully retrieved project progress")
+
+	utils.SuccessResponse(c, progress, "")
+}
+
+// GetProjectsWithProgress handles GET /api/projects?include_progress=true
+func (h *ProjectHandler) GetProjectsWithProgress(c *gin.Context) {
+	includeProgress := c.Query("include_progress")
+
+	if includeProgress == "true" {
+		logger.WithComponent("project-handler").Info("Getting all projects with progress")
+
+		projects, err := h.projectService.GetAllProjectsWithProgress(c.Request.Context())
+		if err != nil {
+			logger.WithComponent("project-handler").
+				WithFields(map[string]interface{}{"error": err.Error()}).
+				Error("Failed to get projects with progress")
+			utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to retrieve projects with progress")
+			return
+		}
+
+		logger.WithComponent("project-handler").
+			WithFields(map[string]interface{}{"count": len(projects)}).
+			Info("Successfully retrieved projects with progress")
+
+		utils.SuccessResponse(c, projects, "")
+	} else {
+		// Fallback to regular GetProjects method
+		h.GetProjects(c)
+	}
+}

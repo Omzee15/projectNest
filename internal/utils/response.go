@@ -4,8 +4,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"lucid-lists-backend/pkg/logger"
 	"lucid-lists-backend/internal/models"
+	"lucid-lists-backend/pkg/logger"
 )
 
 // SuccessResponse sends a successful API response

@@ -224,3 +224,87 @@ func (s *ProjectService) DeleteProject(ctx context.Context, uid uuid.UUID) error
 
 	return nil
 }
+
+// GetProjectProgress calculates and returns progress statistics for a project
+func (s *ProjectService) GetProjectProgress(ctx context.Context, uid uuid.UUID) (*models.ProjectProgressResponse, error) {
+	// Check if project exists
+	_, err := s.projectRepo.GetByUID(ctx, uid)
+	if err != nil {
+		if err.Error() == "project not found" {
+			return nil, utils.NewNotFoundError("Project not found")
+		}
+		return nil, utils.NewInternalError("Failed to get project")
+	}
+
+	// Count total tasks
+	totalTasks, err := s.taskRepo.CountByProjectUID(ctx, uid)
+	if err != nil {
+		return nil, utils.NewInternalError("Failed to count total tasks")
+	}
+
+	// Count completed tasks (using is_completed field)
+	completedTasks, err := s.taskRepo.CountCompletedByProjectUID(ctx, uid)
+	if err != nil {
+		return nil, utils.NewInternalError("Failed to count completed tasks")
+	}
+
+	// Calculate todo tasks (total - completed)
+	todoTasks := totalTasks - completedTasks
+
+	// Calculate progress percentage
+	var progress float64
+	if totalTasks > 0 {
+		progress = float64(completedTasks) / float64(totalTasks)
+	}
+
+	return &models.ProjectProgressResponse{
+		TotalTasks:     int(totalTasks),
+		CompletedTasks: int(completedTasks),
+		TodoTasks:      int(todoTasks),
+		Progress:       progress,
+	}, nil
+}
+
+// GetAllProjectsWithProgress returns all projects with their progress statistics
+func (s *ProjectService) GetAllProjectsWithProgress(ctx context.Context) ([]models.ProjectWithProgressResponse, error) {
+	projects, err := s.projectRepo.GetAll(ctx)
+	if err != nil {
+		return nil, utils.NewInternalError("Failed to retrieve projects")
+	}
+
+	var response []models.ProjectWithProgressResponse
+	for _, project := range projects {
+		// Get project response
+		projectResponse := models.ProjectResponse{
+			ProjectUID:  project.ProjectUID,
+			Name:        project.Name,
+			Description: project.Description,
+			Status:      project.Status,
+			Color:       project.Color,
+			Position:    project.Position,
+			StartDate:   project.StartDate,
+			EndDate:     project.EndDate,
+			CreatedAt:   project.CreatedAt,
+			UpdatedAt:   project.UpdatedAt,
+		}
+
+		// Get progress stats
+		progressStats, err := s.GetProjectProgress(ctx, project.ProjectUID)
+		if err != nil {
+			// If we can't get progress stats, return empty stats instead of failing
+			progressStats = &models.ProjectProgressResponse{
+				TotalTasks:     0,
+				CompletedTasks: 0,
+				TodoTasks:      0,
+				Progress:       0,
+			}
+		}
+
+		response = append(response, models.ProjectWithProgressResponse{
+			ProjectResponse: projectResponse,
+			TaskStats:       *progressStats,
+		})
+	}
+
+	return response, nil
+}

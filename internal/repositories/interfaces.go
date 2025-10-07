@@ -43,4 +43,7 @@ type TaskRepository interface {
 	MoveToList(ctx context.Context, uid uuid.UUID, newListID int) error
 	GetByProjectID(ctx context.Context, projectID int) ([]models.Task, error)
 	GetMaxPositionByList(ctx context.Context, listID int) (int, error)
+	// Progress tracking methods for Phase 2
+	CountByProjectUID(ctx context.Context, projectUID uuid.UUID) (int64, error)
+	CountCompletedByProjectUID(ctx context.Context, projectUID uuid.UUID) (int64, error)
 }

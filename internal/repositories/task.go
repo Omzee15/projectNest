@@ -296,3 +296,39 @@ func (r *taskRepository) GetMaxPositionByList(ctx context.Context, listID int) (
 
 	return maxPosition, nil
 }
+
+// CountByProjectUID counts all active tasks for a project by project UID
+func (r *taskRepository) CountByProjectUID(ctx context.Context, projectUID uuid.UUID) (int64, error) {
+	query := `
+		SELECT COUNT(*)
+		FROM task t
+		JOIN list l ON t.list_id = l.id
+		JOIN project p ON l.project_id = p.id
+		WHERE p.project_uid = $1 AND t.is_active = true AND l.is_active = true AND p.is_active = true`
+
+	var count int64
+	err := r.db.QueryRow(ctx, query, projectUID).Scan(&count)
+	if err != nil {
+		return 0, fmt.Errorf("failed to count tasks by project: %w", err)
+	}
+
+	return count, nil
+}
+
+// CountCompletedByProjectUID counts completed tasks for a project by project UID
+func (r *taskRepository) CountCompletedByProjectUID(ctx context.Context, projectUID uuid.UUID) (int64, error) {
+	query := `
+		SELECT COUNT(*)
+		FROM task t
+		JOIN list l ON t.list_id = l.id
+		JOIN project p ON l.project_id = p.id
+		WHERE p.project_uid = $1 AND t.is_completed = true AND t.is_active = true AND l.is_active = true AND p.is_active = true`
+
+	var count int64
+	err := r.db.QueryRow(ctx, query, projectUID).Scan(&count)
+	if err != nil {
+		return 0, fmt.Errorf("failed to count completed tasks by project: %w", err)
+	}
+
+	return count, nil
+}

@@ -34,8 +34,9 @@ func SetupRoutes(r *gin.Engine, projectHandler *handlers.ProjectHandler, listHan
 		// Project routes
 		projects := api.Group("/projects")
 		{
-			projects.GET("", projectHandler.GetProjects)
+			projects.GET("", projectHandler.GetProjectsWithProgress)
 			projects.GET("/:uid", projectHandler.GetProject)
+			projects.GET("/:uid/progress", projectHandler.GetProjectProgress)
 			projects.POST("", projectHandler.CreateProject)
 			projects.PUT("/:uid", projectHandler.UpdateProject)
 			projects.PATCH("/:uid", projectHandler.PartialUpdateProject)

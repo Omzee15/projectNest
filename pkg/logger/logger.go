@@ -17,7 +17,7 @@ type CleanFormatter struct {
 func (f *CleanFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	var levelColor string
 	var resetColor string = "\033[0m"
-	
+
 	if !f.DisableColors {
 		switch entry.Level {
 		case logrus.DebugLevel:
@@ -35,10 +35,10 @@ func (f *CleanFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 
 	timestamp := entry.Time.Format(f.TimestampFormat)
 	level := strings.ToUpper(entry.Level.String())
-	
+
 	// Build the log message
 	var message strings.Builder
-	
+
 	// Timestamp and level
 	message.WriteString(timestamp)
 	message.WriteString(" [")
@@ -46,17 +46,17 @@ func (f *CleanFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	message.WriteString(level)
 	message.WriteString(resetColor)
 	message.WriteString("] ")
-	
+
 	// Component if available
 	if component, ok := entry.Data["component"]; ok {
 		message.WriteString("[")
 		message.WriteString(component.(string))
 		message.WriteString("] ")
 	}
-	
+
 	// Main message
 	message.WriteString(entry.Message)
-	
+
 	// Additional fields
 	for key, value := range entry.Data {
 		if key != "component" {
@@ -66,9 +66,9 @@ func (f *CleanFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 			message.WriteString(formatValue(value))
 		}
 	}
-	
+
 	message.WriteString("\n")
-	
+
 	return []byte(message.String()), nil
 }
 
