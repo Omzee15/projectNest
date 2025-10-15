@@ -22,6 +22,9 @@ type Config struct {
 	AppEnv   string
 	LogLevel string
 
+	// Authentication
+	JWTSecret string
+
 	// CORS
 	CORSAllowedOrigins []string
 }
@@ -43,6 +46,9 @@ func Load() *Config {
 		// Application
 		AppEnv:   getEnv("APP_ENV", "development"),
 		LogLevel: getEnv("LOG_LEVEL", "info"),
+
+		// Authentication
+		JWTSecret: getEnv("JWT_SECRET", "your-super-secret-jwt-key-change-in-production"),
 
 		// CORS
 		CORSAllowedOrigins: getCORSOrigins(),

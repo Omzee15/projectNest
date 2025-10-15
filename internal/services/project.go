@@ -14,18 +14,20 @@ type ProjectService struct {
 	projectRepo repositories.ProjectRepository
 	listRepo    repositories.ListRepository
 	taskRepo    repositories.TaskRepository
+	userRepo    repositories.UserRepository
 }
 
-func NewProjectService(projectRepo repositories.ProjectRepository, listRepo repositories.ListRepository, taskRepo repositories.TaskRepository) *ProjectService {
+func NewProjectService(projectRepo repositories.ProjectRepository, listRepo repositories.ListRepository, taskRepo repositories.TaskRepository, userRepo repositories.UserRepository) *ProjectService {
 	return &ProjectService{
 		projectRepo: projectRepo,
 		listRepo:    listRepo,
 		taskRepo:    taskRepo,
+		userRepo:    userRepo,
 	}
 }
 
-func (s *ProjectService) GetAllProjects(ctx context.Context) ([]models.ProjectResponse, error) {
-	projects, err := s.projectRepo.GetAll(ctx)
+func (s *ProjectService) GetAllProjects(ctx context.Context, userID int) ([]models.ProjectResponse, error) {
+	projects, err := s.projectRepo.GetAll(ctx, userID)
 	if err != nil {
 		return nil, utils.NewInternalError("Failed to retrieve projects")
 	}
@@ -33,16 +35,19 @@ func (s *ProjectService) GetAllProjects(ctx context.Context) ([]models.ProjectRe
 	var response []models.ProjectResponse
 	for _, project := range projects {
 		response = append(response, models.ProjectResponse{
-			ProjectUID:  project.ProjectUID,
-			Name:        project.Name,
-			Description: project.Description,
-			Status:      project.Status,
-			Color:       project.Color,
-			Position:    project.Position,
-			StartDate:   project.StartDate,
-			EndDate:     project.EndDate,
-			CreatedAt:   project.CreatedAt,
-			UpdatedAt:   project.UpdatedAt,
+			ProjectUID:       project.ProjectUID,
+			Name:             project.Name,
+			Description:      project.Description,
+			Status:           project.Status,
+			Color:            project.Color,
+			Position:         project.Position,
+			StartDate:        project.StartDate,
+			EndDate:          project.EndDate,
+			IsPrivate:        project.IsPrivate,
+			DbmlContent:      project.DbmlContent,
+			FlowchartContent: project.FlowchartContent,
+			CreatedAt:        project.CreatedAt,
+			UpdatedAt:        project.UpdatedAt,
 		})
 	}
 
@@ -62,18 +67,7 @@ func (s *ProjectService) GetProjectWithLists(ctx context.Context, uid uuid.UUID)
 	return projectWithLists, nil
 }
 
-func (s *ProjectService) CreateProject(ctx context.Context, req *models.ProjectRequest) (*models.ProjectResponse, error) {
-	// Get next position if not specified
-	position := req.Position
-	if position == nil {
-		// For now, we'll assume workspace_id = 1 since we don't have user management yet
-		maxPos, err := s.projectRepo.GetMaxPositionByWorkspace(ctx, 1)
-		if err == nil {
-			newPos := maxPos + 1
-			position = &newPos
-		}
-	}
-
+func (s *ProjectService) CreateProject(ctx context.Context, req *models.ProjectRequest, userID int, userUID uuid.UUID) (*models.ProjectResponse, error) {
 	// Set default color if not provided
 	color := req.Color
 	if color == "" {
@@ -82,17 +76,20 @@ func (s *ProjectService) CreateProject(ctx context.Context, req *models.ProjectR
 
 	// Create project model
 	project := &models.Project{
-		ProjectUID:  uuid.New(),
-		WorkspaceID: 1, // Default workspace
-		Name:        req.Name,
-		Description: req.Description,
-		Status:      req.Status,
-		Color:       color,
-		Position:    position,
-		StartDate:   req.StartDate,
-		EndDate:     req.EndDate,
-		IsActive:    true,
-		CreatedBy:   nil, // No user authentication yet
+		ProjectUID:       uuid.New(),
+		UserID:           userID,
+		Name:             req.Name,
+		Description:      req.Description,
+		Status:           req.Status,
+		Color:            color,
+		Position:         req.Position,
+		StartDate:        req.StartDate,
+		EndDate:          req.EndDate,
+		IsPrivate:        req.IsPrivate != nil && *req.IsPrivate,
+		DbmlContent:      req.DbmlContent,
+		FlowchartContent: req.FlowchartContent,
+		IsActive:         true,
+		CreatedBy:        &userUID,
 	}
 
 	if req.Status == "" {
@@ -103,17 +100,27 @@ func (s *ProjectService) CreateProject(ctx context.Context, req *models.ProjectR
 		return nil, utils.NewInternalError("Failed to create project")
 	}
 
+	// Add the creator as an owner in the project_member table
+	if err := s.projectRepo.AddMember(ctx, project.ID, userUID, "owner"); err != nil {
+		// Log the error but don't fail the project creation
+		// In a production environment, you might want to handle this more carefully
+		return nil, utils.NewInternalError("Failed to add project owner")
+	}
+
 	return &models.ProjectResponse{
-		ProjectUID:  project.ProjectUID,
-		Name:        project.Name,
-		Description: project.Description,
-		Status:      project.Status,
-		Color:       project.Color,
-		Position:    project.Position,
-		StartDate:   project.StartDate,
-		EndDate:     project.EndDate,
-		CreatedAt:   project.CreatedAt,
-		UpdatedAt:   project.UpdatedAt,
+		ProjectUID:       project.ProjectUID,
+		Name:             project.Name,
+		Description:      project.Description,
+		Status:           project.Status,
+		Color:            project.Color,
+		Position:         project.Position,
+		StartDate:        project.StartDate,
+		EndDate:          project.EndDate,
+		IsPrivate:        project.IsPrivate,
+		DbmlContent:      project.DbmlContent,
+		FlowchartContent: project.FlowchartContent,
+		CreatedAt:        project.CreatedAt,
+		UpdatedAt:        project.UpdatedAt,
 	}, nil
 }
 
@@ -135,14 +142,17 @@ func (s *ProjectService) UpdateProject(ctx context.Context, uid uuid.UUID, req *
 
 	// Update project fields
 	project := &models.Project{
-		Name:        req.Name,
-		Description: req.Description,
-		Status:      req.Status,
-		Color:       color,
-		Position:    req.Position,
-		StartDate:   req.StartDate,
-		EndDate:     req.EndDate,
-		UpdatedBy:   nil, // No user authentication yet
+		Name:             req.Name,
+		Description:      req.Description,
+		Status:           req.Status,
+		Color:            color,
+		Position:         req.Position,
+		StartDate:        req.StartDate,
+		EndDate:          req.EndDate,
+		IsPrivate:        req.IsPrivate != nil && *req.IsPrivate,
+		DbmlContent:      req.DbmlContent,
+		FlowchartContent: req.FlowchartContent,
+		UpdatedBy:        nil, // No user authentication yet
 	}
 
 	if req.Status == "" {
@@ -168,6 +178,8 @@ func (s *ProjectService) UpdateProject(ctx context.Context, uid uuid.UUID, req *
 		Position:    updatedProject.Position,
 		StartDate:   updatedProject.StartDate,
 		EndDate:     updatedProject.EndDate,
+		IsPrivate:   updatedProject.IsPrivate,
+		DbmlContent: updatedProject.DbmlContent,
 		CreatedAt:   updatedProject.CreatedAt,
 		UpdatedAt:   updatedProject.UpdatedAt,
 	}, nil
@@ -195,16 +207,19 @@ func (s *ProjectService) PartialUpdateProject(ctx context.Context, uid uuid.UUID
 	}
 
 	return &models.ProjectResponse{
-		ProjectUID:  updatedProject.ProjectUID,
-		Name:        updatedProject.Name,
-		Description: updatedProject.Description,
-		Status:      updatedProject.Status,
-		Color:       updatedProject.Color,
-		Position:    updatedProject.Position,
-		StartDate:   updatedProject.StartDate,
-		EndDate:     updatedProject.EndDate,
-		CreatedAt:   updatedProject.CreatedAt,
-		UpdatedAt:   updatedProject.UpdatedAt,
+		ProjectUID:       updatedProject.ProjectUID,
+		Name:             updatedProject.Name,
+		Description:      updatedProject.Description,
+		Status:           updatedProject.Status,
+		Color:            updatedProject.Color,
+		Position:         updatedProject.Position,
+		StartDate:        updatedProject.StartDate,
+		EndDate:          updatedProject.EndDate,
+		IsPrivate:        updatedProject.IsPrivate,
+		DbmlContent:      updatedProject.DbmlContent,
+		FlowchartContent: updatedProject.FlowchartContent,
+		CreatedAt:        updatedProject.CreatedAt,
+		UpdatedAt:        updatedProject.UpdatedAt,
 	}, nil
 }
 
@@ -266,8 +281,8 @@ func (s *ProjectService) GetProjectProgress(ctx context.Context, uid uuid.UUID) 
 }
 
 // GetAllProjectsWithProgress returns all projects with their progress statistics
-func (s *ProjectService) GetAllProjectsWithProgress(ctx context.Context) ([]models.ProjectWithProgressResponse, error) {
-	projects, err := s.projectRepo.GetAll(ctx)
+func (s *ProjectService) GetAllProjectsWithProgress(ctx context.Context, userID int) ([]models.ProjectWithProgressResponse, error) {
+	projects, err := s.projectRepo.GetAll(ctx, userID)
 	if err != nil {
 		return nil, utils.NewInternalError("Failed to retrieve projects")
 	}
@@ -303,6 +318,79 @@ func (s *ProjectService) GetAllProjectsWithProgress(ctx context.Context) ([]mode
 		response = append(response, models.ProjectWithProgressResponse{
 			ProjectResponse: projectResponse,
 			TaskStats:       *progressStats,
+		})
+	}
+
+	return response, nil
+}
+
+// AddMemberByEmail adds a user to a project by their email address
+func (s *ProjectService) AddMemberByEmail(ctx context.Context, projectUID uuid.UUID, email string, role string) error {
+	// Get the project to get its ID
+	project, err := s.projectRepo.GetByUID(ctx, projectUID)
+	if err != nil {
+		if err.Error() == "project not found" {
+			return utils.NewNotFoundError("Project not found")
+		}
+		return utils.NewInternalError("Failed to get project")
+	}
+
+	// Find the user by email
+	user, err := s.userRepo.GetByEmail(ctx, email)
+	if err != nil {
+		return utils.NewNotFoundError("user not found")
+	}
+
+	// Check if user is already a member
+	isMember, err := s.projectRepo.IsMember(ctx, project.ID, user.UserUID)
+	if err != nil {
+		return utils.NewInternalError("Failed to check membership")
+	}
+
+	if isMember {
+		return utils.NewBadRequestError("user already a member")
+	}
+
+	// Add the user as a member
+	err = s.projectRepo.AddMember(ctx, project.ID, user.UserUID, role)
+	if err != nil {
+		return utils.NewInternalError("Failed to add member")
+	}
+
+	return nil
+}
+
+// GetProjectMembers returns all members of a project
+func (s *ProjectService) GetProjectMembers(ctx context.Context, projectUID uuid.UUID) ([]models.ProjectMemberResponse, error) {
+	// Get the project to get its ID
+	project, err := s.projectRepo.GetByUID(ctx, projectUID)
+	if err != nil {
+		if err.Error() == "project not found" {
+			return nil, utils.NewNotFoundError("Project not found")
+		}
+		return nil, utils.NewInternalError("Failed to get project")
+	}
+
+	// Get all members
+	members, err := s.projectRepo.GetMembers(ctx, project.ID)
+	if err != nil {
+		return nil, utils.NewInternalError("Failed to get project members")
+	}
+
+	var response []models.ProjectMemberResponse
+	for _, member := range members {
+		// Get user details
+		user, err := s.userRepo.GetByUID(ctx, member.UserID)
+		if err != nil {
+			continue // Skip if user not found
+		}
+
+		response = append(response, models.ProjectMemberResponse{
+			UserUID:  user.UserUID,
+			Email:    user.Email,
+			Name:     user.Name,
+			Role:     member.Role,
+			JoinedAt: member.JoinedAt,
 		})
 	}
 

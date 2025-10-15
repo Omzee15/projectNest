@@ -21,15 +21,19 @@ func NewProjectRepository(db *pgxpool.Pool) ProjectRepository {
 	return &projectRepository{db: db}
 }
 
-func (r *projectRepository) GetAll(ctx context.Context) ([]models.Project, error) {
+func (r *projectRepository) GetAll(ctx context.Context, userID int) ([]models.Project, error) {
 	query := `
-		SELECT id, project_uid, name, description, status, color, position, start_date, end_date,
-			   created_at, created_by, updated_at, updated_by, is_active
-		FROM project
-		WHERE is_active = true
-		ORDER BY COALESCE(position, 999999), created_at DESC`
+		SELECT p.id, p.project_uid, p.user_id, p.name, p.description, p.status, p.color, p.position, p.start_date, p.end_date,
+			   p.is_private, p.dbml_content, p.dbml_layout_data, p.flowchart_content, p.created_at, p.created_by, p.updated_at, p.updated_by, p.is_active
+		FROM project p
+		INNER JOIN project_member pm ON p.id = pm.project_id
+		INNER JOIN users u ON pm.user_id = u.user_uid
+		WHERE p.is_active = true AND u.id = $1
+		GROUP BY p.id, p.project_uid, p.user_id, p.name, p.description, p.status, p.color, p.position, p.start_date, p.end_date,
+			   p.is_private, p.dbml_content, p.dbml_layout_data, p.flowchart_content, p.created_at, p.created_by, p.updated_at, p.updated_by, p.is_active
+		ORDER BY COALESCE(p.position, 999999), p.created_at DESC`
 
-	rows, err := r.db.Query(ctx, query)
+	rows, err := r.db.Query(ctx, query, userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query projects: %w", err)
 	}
@@ -39,8 +43,8 @@ func (r *projectRepository) GetAll(ctx context.Context) ([]models.Project, error
 	for rows.Next() {
 		var p models.Project
 		err := rows.Scan(
-			&p.ID, &p.ProjectUID, &p.Name, &p.Description, &p.Status, &p.Color, &p.Position,
-			&p.StartDate, &p.EndDate, &p.CreatedAt, &p.CreatedBy,
+			&p.ID, &p.ProjectUID, &p.UserID, &p.Name, &p.Description, &p.Status, &p.Color, &p.Position,
+			&p.StartDate, &p.EndDate, &p.IsPrivate, &p.DbmlContent, &p.DbmlLayoutData, &p.FlowchartContent, &p.CreatedAt, &p.CreatedBy,
 			&p.UpdatedAt, &p.UpdatedBy, &p.IsActive,
 		)
 		if err != nil {
@@ -54,15 +58,39 @@ func (r *projectRepository) GetAll(ctx context.Context) ([]models.Project, error
 
 func (r *projectRepository) GetByUID(ctx context.Context, uid uuid.UUID) (*models.Project, error) {
 	query := `
-		SELECT id, project_uid, name, description, status, color, position, start_date, end_date,
-			   created_at, created_by, updated_at, updated_by, is_active
+		SELECT id, project_uid, user_id, name, description, status, color, position, start_date, end_date,
+			   is_private, dbml_content, dbml_layout_data, flowchart_content, created_at, created_by, updated_at, updated_by, is_active
 		FROM project
 		WHERE project_uid = $1 AND is_active = true`
 
 	var p models.Project
 	err := r.db.QueryRow(ctx, query, uid).Scan(
-		&p.ID, &p.ProjectUID, &p.Name, &p.Description, &p.Status, &p.Color, &p.Position,
-		&p.StartDate, &p.EndDate, &p.CreatedAt, &p.CreatedBy,
+		&p.ID, &p.ProjectUID, &p.UserID, &p.Name, &p.Description, &p.Status, &p.Color, &p.Position,
+		&p.StartDate, &p.EndDate, &p.IsPrivate, &p.DbmlContent, &p.DbmlLayoutData, &p.FlowchartContent, &p.CreatedAt, &p.CreatedBy,
+		&p.UpdatedAt, &p.UpdatedBy, &p.IsActive,
+	)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("project not found")
+		}
+		return nil, fmt.Errorf("failed to get project: %w", err)
+	}
+
+	return &p, nil
+}
+
+func (r *projectRepository) GetByID(ctx context.Context, id int) (*models.Project, error) {
+	query := `
+		SELECT id, project_uid, user_id, name, description, status, color, position, start_date, end_date,
+			   is_private, dbml_content, dbml_layout_data, flowchart_content, created_at, created_by, updated_at, updated_by, is_active
+		FROM project
+		WHERE id = $1 AND is_active = true`
+
+	var p models.Project
+	err := r.db.QueryRow(ctx, query, id).Scan(
+		&p.ID, &p.ProjectUID, &p.UserID, &p.Name, &p.Description, &p.Status, &p.Color, &p.Position,
+		&p.StartDate, &p.EndDate, &p.IsPrivate, &p.DbmlContent, &p.DbmlLayoutData, &p.FlowchartContent, &p.CreatedAt, &p.CreatedBy,
 		&p.UpdatedAt, &p.UpdatedBy, &p.IsActive,
 	)
 
@@ -169,34 +197,37 @@ func (r *projectRepository) GetWithLists(ctx context.Context, uid uuid.UUID) (*m
 		finalLists = append(finalLists, *listsMap[listUID])
 	}
 
-	projectWithLists := &models.ProjectWithListsResponse{
+	response := &models.ProjectWithListsResponse{
 		ProjectResponse: models.ProjectResponse{
-			ProjectUID:  project.ProjectUID,
-			Name:        project.Name,
-			Description: project.Description,
-			Status:      project.Status,
-			Color:       project.Color,
-			Position:    project.Position,
-			StartDate:   project.StartDate,
-			EndDate:     project.EndDate,
-			CreatedAt:   project.CreatedAt,
-			UpdatedAt:   project.UpdatedAt,
+			ProjectUID:       project.ProjectUID,
+			Name:             project.Name,
+			Description:      project.Description,
+			Status:           project.Status,
+			Color:            project.Color,
+			Position:         project.Position,
+			StartDate:        project.StartDate,
+			EndDate:          project.EndDate,
+			IsPrivate:        project.IsPrivate,
+			DbmlContent:      project.DbmlContent,
+			FlowchartContent: project.FlowchartContent,
+			CreatedAt:        project.CreatedAt,
+			UpdatedAt:        project.UpdatedAt,
 		},
 		Lists: finalLists,
 	}
 
-	return projectWithLists, nil
+	return response, nil
 }
 
 func (r *projectRepository) Create(ctx context.Context, project *models.Project) error {
 	query := `
-		INSERT INTO project (project_uid, name, description, status, color, position, start_date, end_date, created_by)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		INSERT INTO project (project_uid, user_id, name, description, status, color, position, start_date, end_date, is_private, dbml_content, dbml_layout_data, flowchart_content, created_by)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
 		RETURNING id, created_at`
 
 	err := r.db.QueryRow(ctx, query,
-		project.ProjectUID, project.Name, project.Description, project.Status,
-		project.Color, project.Position, project.StartDate, project.EndDate, project.CreatedBy,
+		project.ProjectUID, project.UserID, project.Name, project.Description, project.Status,
+		project.Color, project.Position, project.StartDate, project.EndDate, project.IsPrivate, project.DbmlContent, project.DbmlLayoutData, project.FlowchartContent, project.CreatedBy,
 	).Scan(&project.ID, &project.CreatedAt)
 
 	if err != nil {
@@ -210,13 +241,13 @@ func (r *projectRepository) Update(ctx context.Context, uid uuid.UUID, project *
 	query := `
 		UPDATE project 
 		SET name = $2, description = $3, status = $4, color = $5, position = $6, start_date = $7, end_date = $8,
-			updated_at = $9, updated_by = $10
+			is_private = $9, dbml_content = $10, dbml_layout_data = $11, flowchart_content = $12, updated_at = $13, updated_by = $14
 		WHERE project_uid = $1 AND is_active = true`
 
 	now := time.Now()
 	result, err := r.db.Exec(ctx, query,
 		uid, project.Name, project.Description, project.Status, project.Color, project.Position,
-		project.StartDate, project.EndDate, now, project.UpdatedBy,
+		project.StartDate, project.EndDate, project.IsPrivate, project.DbmlContent, project.DbmlLayoutData, project.FlowchartContent, now, project.UpdatedBy,
 	)
 
 	if err != nil {
@@ -270,6 +301,29 @@ func (r *projectRepository) PartialUpdate(ctx context.Context, uid uuid.UUID, up
 		args = append(args, *updates.EndDate)
 		argCount++
 	}
+	if updates.IsPrivate != nil {
+		setParts = append(setParts, fmt.Sprintf("is_private = $%d", argCount))
+		args = append(args, *updates.IsPrivate)
+		argCount++
+	}
+	if updates.DbmlContent != nil {
+		fmt.Printf("DEBUG: DbmlContent is not nil, value: '%s', length: %d\n", *updates.DbmlContent, len(*updates.DbmlContent))
+		setParts = append(setParts, fmt.Sprintf("dbml_content = $%d", argCount))
+		args = append(args, *updates.DbmlContent)
+		argCount++
+	} else {
+		fmt.Printf("DEBUG: DbmlContent is nil\n")
+	}
+	if updates.DbmlLayoutData != nil {
+		setParts = append(setParts, fmt.Sprintf("dbml_layout_data = $%d", argCount))
+		args = append(args, *updates.DbmlLayoutData)
+		argCount++
+	}
+	if updates.FlowchartContent != nil {
+		setParts = append(setParts, fmt.Sprintf("flowchart_content = $%d", argCount))
+		args = append(args, *updates.FlowchartContent)
+		argCount++
+	}
 
 	if len(setParts) == 0 {
 		return fmt.Errorf("no fields to update")
@@ -297,18 +351,6 @@ func (r *projectRepository) PartialUpdate(ctx context.Context, uid uuid.UUID, up
 	return nil
 }
 
-func (r *projectRepository) GetMaxPositionByWorkspace(ctx context.Context, workspaceID int) (int, error) {
-	query := `SELECT COALESCE(MAX(position), 0) FROM project WHERE workspace_id = $1 AND is_active = true`
-
-	var maxPosition int
-	err := r.db.QueryRow(ctx, query, workspaceID).Scan(&maxPosition)
-	if err != nil {
-		return 0, fmt.Errorf("failed to get max position: %w", err)
-	}
-
-	return maxPosition, nil
-}
-
 func (r *projectRepository) Delete(ctx context.Context, uid uuid.UUID) error {
 	query := `UPDATE project SET is_active = false WHERE project_uid = $1 AND is_active = true`
 
@@ -319,6 +361,19 @@ func (r *projectRepository) Delete(ctx context.Context, uid uuid.UUID) error {
 
 	if result.RowsAffected() == 0 {
 		return fmt.Errorf("project not found")
+	}
+
+	return nil
+}
+
+func (r *projectRepository) AddMember(ctx context.Context, projectID int, userUID uuid.UUID, role string) error {
+	query := `
+		INSERT INTO project_member (project_id, user_id, role)
+		VALUES ($1, $2, $3)`
+
+	_, err := r.db.Exec(ctx, query, projectID, userUID, role)
+	if err != nil {
+		return fmt.Errorf("failed to add project member: %w", err)
 	}
 
 	return nil
@@ -344,4 +399,47 @@ func safeTimeDeref(t *time.Time) time.Time {
 		return *t
 	}
 	return time.Time{}
+}
+
+func (r *projectRepository) GetMembers(ctx context.Context, projectID int) ([]models.ProjectMember, error) {
+	query := `
+		SELECT id, project_id, user_id, role, joined_at
+		FROM project_member
+		WHERE project_id = $1
+		ORDER BY joined_at ASC`
+
+	rows, err := r.db.Query(ctx, query, projectID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query project members: %w", err)
+	}
+	defer rows.Close()
+
+	var members []models.ProjectMember
+	for rows.Next() {
+		var m models.ProjectMember
+		err := rows.Scan(&m.ID, &m.ProjectID, &m.UserID, &m.Role, &m.JoinedAt)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan project member: %w", err)
+		}
+		members = append(members, m)
+	}
+
+	return members, nil
+}
+
+func (r *projectRepository) IsMember(ctx context.Context, projectID int, userUID uuid.UUID) (bool, error) {
+	query := `
+		SELECT EXISTS(
+			SELECT 1 
+			FROM project_member 
+			WHERE project_id = $1 AND user_id = $2
+		)`
+
+	var exists bool
+	err := r.db.QueryRow(ctx, query, projectID, userUID).Scan(&exists)
+	if err != nil {
+		return false, fmt.Errorf("failed to check membership: %w", err)
+	}
+
+	return exists, nil
 }

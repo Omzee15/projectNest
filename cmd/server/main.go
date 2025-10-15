@@ -46,25 +46,48 @@ func main() {
 	log.Info("Database connected successfully")
 
 	// Initialize repositories
+	userRepo := repositories.NewUserRepository(db)
 	projectRepo := repositories.NewProjectRepository(db)
 	listRepo := repositories.NewListRepository(db)
 	taskRepo := repositories.NewTaskRepository(db)
+	// Phase 3: Brainstorming & Planning Layer repositories
+	canvasRepo := repositories.NewCanvasRepository(db)
+	noteRepo := repositories.NewNoteRepository(db)
+	folderRepo := repositories.NewNoteFolderRepository(db)
+	chatRepo := repositories.NewChatRepository(db)
 
 	// Initialize services
-	projectService := services.NewProjectService(projectRepo, listRepo, taskRepo)
+	projectService := services.NewProjectService(projectRepo, listRepo, taskRepo, userRepo)
 	listService := services.NewListService(listRepo, taskRepo, projectRepo)
 	taskService := services.NewTaskService(taskRepo, listRepo)
+	// Phase 3: Brainstorming & Planning Layer services
+	canvasService := services.NewCanvasService(canvasRepo, projectRepo)
+	noteService := services.NewNoteService(noteRepo, projectRepo)
+	folderService := services.NewNoteFolderService(folderRepo, projectRepo)
+	chatService := services.NewChatService(chatRepo, projectRepo)
 
 	// Initialize handlers
 	projectHandler := handlers.NewProjectHandler(projectService)
 	listHandler := handlers.NewListHandler(listService)
 	taskHandler := handlers.NewTaskHandler(taskService)
+	// Phase 3: Brainstorming & Planning Layer handlers
+	canvasHandler := handlers.NewCanvasHandler(canvasService)
+	noteHandler := handlers.NewNoteHandler(noteService)
+	folderHandler := handlers.NewNoteFolderHandler(folderService)
+	chatHandler := handlers.NewChatHandler(chatService)
+
+	// AI project creation handler
+	aiProjectHandler := handlers.NewAIProjectCreationHandler(projectService, listService, taskService, canvasService, chatService)
+
+	// Authentication layer
+	authService := services.NewAuthService(userRepo, cfg.JWTSecret)
+	authHandler := handlers.NewAuthHandler(authService)
 
 	// Setup router
 	router := setupRouter(cfg)
 
 	// Setup routes
-	routes.SetupRoutes(router, projectHandler, listHandler, taskHandler)
+	routes.SetupRoutes(router, projectHandler, listHandler, taskHandler, canvasHandler, noteHandler, folderHandler, chatHandler, authHandler, aiProjectHandler, authService, projectRepo, db)
 
 	// Create server
 	server := &http.Server{
