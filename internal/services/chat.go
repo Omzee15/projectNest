@@ -13,12 +13,14 @@ import (
 type ChatService struct {
 	chatRepo    repositories.ChatRepositoryInterface
 	projectRepo repositories.ProjectRepository
+	userRepo    repositories.UserRepository
 }
 
-func NewChatService(chatRepo repositories.ChatRepositoryInterface, projectRepo repositories.ProjectRepository) *ChatService {
+func NewChatService(chatRepo repositories.ChatRepositoryInterface, projectRepo repositories.ProjectRepository, userRepo repositories.UserRepository) *ChatService {
 	return &ChatService{
 		chatRepo:    chatRepo,
 		projectRepo: projectRepo,
+		userRepo:    userRepo,
 	}
 }
 
@@ -112,12 +114,21 @@ func (s *ChatService) CreateConversation(req models.ChatConversationRequest, pro
 		return nil, fmt.Errorf("project not found")
 	}
 
+	// Get user to get integer ID
+	user, err := s.userRepo.GetByUID(context.TODO(), userUID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user: %w", err)
+	}
+	if user == nil {
+		return nil, fmt.Errorf("user not found")
+	}
+
 	// Create conversation
 	conversation := &models.ChatConversation{
 		ConversationUID: uuid.New(),
 		ProjectID:       project.ID,
 		Name:            req.Name,
-		CreatedBy:       &userUID,
+		CreatedBy:       &user.ID,
 		IsActive:        true,
 	}
 
@@ -145,13 +156,22 @@ func (s *ChatService) CreateMessage(req models.ChatMessageRequest, userUID uuid.
 		return nil, fmt.Errorf("conversation not found")
 	}
 
+	// Get user to get integer ID
+	user, err := s.userRepo.GetByUID(context.TODO(), userUID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user: %w", err)
+	}
+	if user == nil {
+		return nil, fmt.Errorf("user not found")
+	}
+
 	// Create message (no special processing - handled on frontend)
 	message := &models.ChatMessage{
 		MessageUID:     uuid.New(),
 		ConversationID: conversation.ID,
 		MessageType:    req.MessageType,
 		Content:        req.Content,
-		CreatedBy:      &userUID,
+		CreatedBy:      &user.ID,
 	}
 
 	err = s.chatRepo.CreateMessage(message)

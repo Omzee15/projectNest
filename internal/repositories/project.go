@@ -14,11 +14,15 @@ import (
 )
 
 type projectRepository struct {
-	db *pgxpool.Pool
+	db       *pgxpool.Pool
+	userRepo UserRepository
 }
 
-func NewProjectRepository(db *pgxpool.Pool) ProjectRepository {
-	return &projectRepository{db: db}
+func NewProjectRepository(db *pgxpool.Pool, userRepo UserRepository) ProjectRepository {
+	return &projectRepository{
+		db:       db,
+		userRepo: userRepo,
+	}
 }
 
 func (r *projectRepository) GetAll(ctx context.Context, userID int) ([]models.Project, error) {
@@ -27,7 +31,7 @@ func (r *projectRepository) GetAll(ctx context.Context, userID int) ([]models.Pr
 			   p.is_private, p.dbml_content, p.dbml_layout_data, p.flowchart_content, p.created_at, p.created_by, p.updated_at, p.updated_by, p.is_active
 		FROM project p
 		INNER JOIN project_member pm ON p.id = pm.project_id
-		INNER JOIN users u ON pm.user_id = u.user_uid
+		INNER JOIN users u ON pm.user_id = u.id
 		WHERE p.is_active = true AND u.id = $1
 		GROUP BY p.id, p.project_uid, p.user_id, p.name, p.description, p.status, p.color, p.position, p.start_date, p.end_date,
 			   p.is_private, p.dbml_content, p.dbml_layout_data, p.flowchart_content, p.created_at, p.created_by, p.updated_at, p.updated_by, p.is_active
@@ -367,11 +371,20 @@ func (r *projectRepository) Delete(ctx context.Context, uid uuid.UUID) error {
 }
 
 func (r *projectRepository) AddMember(ctx context.Context, projectID int, userUID uuid.UUID, role string) error {
+	// Get user by UUID to get the integer ID
+	user, err := r.userRepo.GetByUID(ctx, userUID)
+	if err != nil {
+		return fmt.Errorf("failed to get user: %w", err)
+	}
+	if user == nil {
+		return fmt.Errorf("user not found")
+	}
+
 	query := `
 		INSERT INTO project_member (project_id, user_id, role)
 		VALUES ($1, $2, $3)`
 
-	_, err := r.db.Exec(ctx, query, projectID, userUID, role)
+	_, err = r.db.Exec(ctx, query, projectID, user.ID, role)
 	if err != nil {
 		return fmt.Errorf("failed to add project member: %w", err)
 	}
@@ -428,6 +441,15 @@ func (r *projectRepository) GetMembers(ctx context.Context, projectID int) ([]mo
 }
 
 func (r *projectRepository) IsMember(ctx context.Context, projectID int, userUID uuid.UUID) (bool, error) {
+	// Get user by UUID to get the integer ID
+	user, err := r.userRepo.GetByUID(ctx, userUID)
+	if err != nil {
+		return false, fmt.Errorf("failed to get user: %w", err)
+	}
+	if user == nil {
+		return false, nil // User doesn't exist, so not a member
+	}
+
 	query := `
 		SELECT EXISTS(
 			SELECT 1 
@@ -436,7 +458,7 @@ func (r *projectRepository) IsMember(ctx context.Context, projectID int, userUID
 		)`
 
 	var exists bool
-	err := r.db.QueryRow(ctx, query, projectID, userUID).Scan(&exists)
+	err = r.db.QueryRow(ctx, query, projectID, user.ID).Scan(&exists)
 	if err != nil {
 		return false, fmt.Errorf("failed to check membership: %w", err)
 	}

@@ -15,7 +15,7 @@ import (
 )
 
 // SetupRoutes configures all the routes for the application
-func SetupRoutes(r *gin.Engine, projectHandler *handlers.ProjectHandler, listHandler *handlers.ListHandler, taskHandler *handlers.TaskHandler, canvasHandler *handlers.CanvasHandler, noteHandler *handlers.NoteHandler, folderHandler *handlers.NoteFolderHandler, chatHandler *handlers.ChatHandler, authHandler *handlers.AuthHandler, aiProjectHandler *handlers.AIProjectCreationHandler, authService *services.AuthService, projectRepo repositories.ProjectRepository, db *pgxpool.Pool) {
+func SetupRoutes(r *gin.Engine, projectHandler *handlers.ProjectHandler, listHandler *handlers.ListHandler, taskHandler *handlers.TaskHandler, canvasHandler *handlers.CanvasHandler, noteHandler *handlers.NoteHandler, folderHandler *handlers.NoteFolderHandler, chatHandler *handlers.ChatHandler, authHandler *handlers.AuthHandler, aiProjectHandler *handlers.AIProjectCreationHandler, settingsHandler *handlers.UserSettingsHandler, authService *services.AuthService, projectRepo repositories.ProjectRepository, db *pgxpool.Pool) {
 	// Add middleware
 	r.Use(middleware.RequestLogging())
 
@@ -132,6 +132,21 @@ func SetupRoutes(r *gin.Engine, projectHandler *handlers.ProjectHandler, listHan
 				chat.GET("/conversations/:conversationUid", chatHandler.GetConversationWithMessages)
 				chat.DELETE("/conversations/:conversationUid", chatHandler.DeleteConversation)
 				chat.POST("/messages", chatHandler.CreateMessage)
+			}
+
+			// User settings routes
+			settings := protected.Group("/settings")
+			{
+				settings.GET("", settingsHandler.GetUserSettings)
+				settings.PUT("", settingsHandler.UpdateUserSettings)
+				settings.PATCH("", settingsHandler.UpdateUserSettings) // Support both PUT and PATCH
+				settings.POST("/reset", settingsHandler.ResetUserSettings)
+			}
+
+			// Theme routes (public - no auth needed for theme list)
+			themes := api.Group("/themes")
+			{
+				themes.GET("", settingsHandler.GetAvailableThemes)
 			}
 
 			// AI project creation routes

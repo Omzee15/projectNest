@@ -128,3 +128,38 @@ func (r *userRepository) Create(ctx context.Context, user *models.User) error {
 
 	return nil
 }
+
+func (r *userRepository) GetByID(ctx context.Context, id int) (*models.User, error) {
+	query := `
+		SELECT id, user_uid, email, password_hash, name, created_at, updated_at, is_active
+		FROM users
+		WHERE id = $1 AND is_active = true`
+
+	var u models.User
+	err := r.db.QueryRow(ctx, query, id).Scan(
+		&u.ID, &u.UserUID, &u.Email, &u.Password, &u.Name,
+		&u.CreatedAt, &u.UpdatedAt, &u.IsActive,
+	)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("user not found")
+		}
+		logger.WithComponent("user-repository").
+			WithFields(map[string]interface{}{
+				"id":    id,
+				"error": err.Error(),
+			}).
+			Error("Failed to get user by ID")
+		return nil, fmt.Errorf("failed to get user: %w", err)
+	}
+
+	logger.WithComponent("user-repository").
+		WithFields(map[string]interface{}{
+			"user_uid": u.UserUID.String(),
+			"id":       u.ID,
+		}).
+		Debug("Successfully retrieved user by ID")
+
+	return &u, nil
+}

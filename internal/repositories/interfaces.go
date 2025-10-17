@@ -92,6 +92,7 @@ type NoteFolderRepositoryInterface interface {
 // UserRepository defines the interface for user data operations
 type UserRepository interface {
 	GetByEmail(ctx context.Context, email string) (*models.User, error)
+	GetByID(ctx context.Context, id int) (*models.User, error)
 	GetByUID(ctx context.Context, uid uuid.UUID) (*models.User, error)
 	Create(ctx context.Context, user *models.User) error
 }
@@ -105,4 +106,13 @@ type ChatRepositoryInterface interface {
 	DeleteConversation(conversationUID uuid.UUID) error
 	GetMessagesByConversationID(conversationID int) ([]models.ChatMessage, error)
 	CreateMessage(message *models.ChatMessage) error
+}
+
+// UserSettingsRepository defines the interface for user settings operations
+type UserSettingsRepository interface {
+	GetByUserID(ctx context.Context, userID int) (*models.UserSettings, error)
+	Create(ctx context.Context, settings *models.UserSettings) error
+	Update(ctx context.Context, userID int, settings *models.UserSettingsRequest) error
+	CreateOrUpdate(ctx context.Context, userID int, settings *models.UserSettingsRequest) error
+	DeleteByUserID(ctx context.Context, userID int) error
 }

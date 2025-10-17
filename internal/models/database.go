@@ -26,9 +26,9 @@ type Workspace struct {
 	Name         string     `db:"name"`
 	Description  *string    `db:"description"`
 	CreatedAt    time.Time  `db:"created_at"`
-	CreatedBy    *uuid.UUID `db:"created_by"`
+	CreatedBy    *int       `db:"created_by"`
 	UpdatedAt    *time.Time `db:"updated_at"`
-	UpdatedBy    *uuid.UUID `db:"updated_by"`
+	UpdatedBy    *int       `db:"updated_by"`
 	IsActive     bool       `db:"is_active"`
 }
 
@@ -48,16 +48,16 @@ type Project struct {
 	DbmlLayoutData   *string    `db:"dbml_layout_data"`
 	FlowchartContent *string    `db:"flowchart_content"`
 	CreatedAt        time.Time  `db:"created_at"`
-	CreatedBy        *uuid.UUID `db:"created_by"`
+	CreatedBy        *int       `db:"created_by"`
 	UpdatedAt        *time.Time `db:"updated_at"`
-	UpdatedBy        *uuid.UUID `db:"updated_by"`
+	UpdatedBy        *int       `db:"updated_by"`
 	IsActive         bool       `db:"is_active"`
 }
 
 type ProjectMember struct {
 	ID        int       `db:"id"`
 	ProjectID int       `db:"project_id"`
-	UserID    uuid.UUID `db:"user_id"`
+	UserID    int       `db:"user_id"`
 	Role      string    `db:"role"` // 'owner' or 'member'
 	JoinedAt  time.Time `db:"joined_at"`
 }
@@ -70,9 +70,9 @@ type List struct {
 	Color     string     `db:"color"`
 	Position  int        `db:"position"`
 	CreatedAt time.Time  `db:"created_at"`
-	CreatedBy *uuid.UUID `db:"created_by"`
+	CreatedBy *int       `db:"created_by"`
 	UpdatedAt *time.Time `db:"updated_at"`
-	UpdatedBy *uuid.UUID `db:"updated_by"`
+	UpdatedBy *int       `db:"updated_by"`
 	IsActive  bool       `db:"is_active"`
 }
 
@@ -90,9 +90,9 @@ type Task struct {
 	DueDate     *time.Time `db:"due_date"`
 	CompletedAt *time.Time `db:"completed_at"`
 	CreatedAt   time.Time  `db:"created_at"`
-	CreatedBy   *uuid.UUID `db:"created_by"`
+	CreatedBy   *int       `db:"created_by"`
 	UpdatedAt   *time.Time `db:"updated_at"`
-	UpdatedBy   *uuid.UUID `db:"updated_by"`
+	UpdatedBy   *int       `db:"updated_by"`
 	IsActive    bool       `db:"is_active"`
 }
 
@@ -105,8 +105,8 @@ type BrainstormCanvas struct {
 	StateJSON string     `db:"state_json"` // JSONB stored as string
 	CreatedAt time.Time  `db:"created_at"`
 	UpdatedAt *time.Time `db:"updated_at"`
-	CreatedBy *uuid.UUID `db:"created_by"`
-	UpdatedBy *uuid.UUID `db:"updated_by"`
+	CreatedBy *int       `db:"created_by"`
+	UpdatedBy *int       `db:"updated_by"`
 }
 
 type NoteFolder struct {
@@ -118,8 +118,8 @@ type NoteFolder struct {
 	Position       *int       `db:"position"`
 	CreatedAt      time.Time  `db:"created_at"`
 	UpdatedAt      *time.Time `db:"updated_at"`
-	CreatedBy      *uuid.UUID `db:"created_by"`
-	UpdatedBy      *uuid.UUID `db:"updated_by"`
+	CreatedBy      *int       `db:"created_by"`
+	UpdatedBy      *int       `db:"updated_by"`
 	IsActive       bool       `db:"is_active"`
 }
 
@@ -133,8 +133,8 @@ type Note struct {
 	Position    *int       `db:"position"`
 	CreatedAt   time.Time  `db:"created_at"`
 	UpdatedAt   *time.Time `db:"updated_at"`
-	CreatedBy   *uuid.UUID `db:"created_by"`
-	UpdatedBy   *uuid.UUID `db:"updated_by"`
+	CreatedBy   *int       `db:"created_by"`
+	UpdatedBy   *int       `db:"updated_by"`
 	IsActive    bool       `db:"is_active"`
 }
 
@@ -146,8 +146,8 @@ type ChatConversation struct {
 	Name            string     `db:"name"`
 	CreatedAt       time.Time  `db:"created_at"`
 	UpdatedAt       *time.Time `db:"updated_at"`
-	CreatedBy       *uuid.UUID `db:"created_by"`
-	UpdatedBy       *uuid.UUID `db:"updated_by"`
+	CreatedBy       *int       `db:"created_by"`
+	UpdatedBy       *int       `db:"updated_by"`
 	IsActive        bool       `db:"is_active"`
 }
 
@@ -158,5 +158,65 @@ type ChatMessage struct {
 	MessageType    string     `db:"message_type"` // 'user' or 'ai'
 	Content        string     `db:"content"`
 	CreatedAt      time.Time  `db:"created_at"`
-	CreatedBy      *uuid.UUID `db:"created_by"`
+	CreatedBy      *int       `db:"created_by"`
+}
+
+type UserSettings struct {
+	ID              int        `db:"id"`
+	SettingsUID     uuid.UUID  `db:"settings_uid"`
+	UserID          int        `db:"user_id"`
+	Theme           string     `db:"theme"`           // theme name (e.g., "projectnest-default", "projectnest-dark", "github-dark")
+	Language        string     `db:"language"`        // preferred language (e.g., "en", "es", "fr")
+	Timezone        string     `db:"timezone"`        // user timezone (e.g., "America/New_York")
+	NotificationsEnabled bool  `db:"notifications_enabled"`
+	EmailNotifications  bool   `db:"email_notifications"`
+	SoundEnabled        bool   `db:"sound_enabled"`
+	CompactMode         bool   `db:"compact_mode"`    // compact UI mode
+	AutoSave            bool   `db:"auto_save"`       // auto-save feature
+	AutoSaveInterval    int    `db:"auto_save_interval"` // in seconds
+	CreatedAt       time.Time  `db:"created_at"`
+	UpdatedAt       time.Time  `db:"updated_at"`
+}
+
+// Additional models for complete database coverage
+type TaskAssignee struct {
+	ID         int       `db:"id"`
+	TaskID     int       `db:"task_id"`
+	UserID     int       `db:"user_id"`
+	AssignedAt time.Time `db:"assigned_at"`
+}
+
+type WorkspaceMember struct {
+	ID          int       `db:"id"`
+	WorkspaceID int       `db:"workspace_id"`
+	UserID      int       `db:"user_id"`
+	Role        string    `db:"role"`
+	JoinedAt    time.Time `db:"joined_at"`
+}
+
+// Notes model (legacy table that may need to be cleaned up)
+type Notes struct {
+	ID        int        `db:"id"`
+	NoteUID   uuid.UUID  `db:"note_uid"`
+	ProjectID int        `db:"project_id"`
+	Title     string     `db:"title"`
+	Content   string     `db:"content"`
+	CreatedAt time.Time  `db:"created_at"`
+	UpdatedAt *time.Time `db:"updated_at"`
+	CreatedBy *int       `db:"created_by"`
+	UpdatedBy *int       `db:"updated_by"`
+	IsActive  bool       `db:"is_active"`
+}
+
+// Canvas model
+type Canvas struct {
+	ID        int        `db:"id"`
+	CanvasUID uuid.UUID  `db:"canvas_uid"`
+	ProjectID int        `db:"project_id"`
+	StateJSON string     `db:"state_json"`
+	CreatedAt time.Time  `db:"created_at"`
+	UpdatedAt *time.Time `db:"updated_at"`
+	CreatedBy *int       `db:"created_by"`
+	UpdatedBy *int       `db:"updated_by"`
+	IsActive  bool       `db:"is_active"`
 }

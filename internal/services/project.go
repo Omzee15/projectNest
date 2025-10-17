@@ -89,7 +89,7 @@ func (s *ProjectService) CreateProject(ctx context.Context, req *models.ProjectR
 		DbmlContent:      req.DbmlContent,
 		FlowchartContent: req.FlowchartContent,
 		IsActive:         true,
-		CreatedBy:        &userUID,
+		CreatedBy:        &userID,
 	}
 
 	if req.Status == "" {
@@ -380,7 +380,7 @@ func (s *ProjectService) GetProjectMembers(ctx context.Context, projectUID uuid.
 	var response []models.ProjectMemberResponse
 	for _, member := range members {
 		// Get user details
-		user, err := s.userRepo.GetByUID(ctx, member.UserID)
+		user, err := s.userRepo.GetByID(ctx, member.UserID)
 		if err != nil {
 			continue // Skip if user not found
 		}

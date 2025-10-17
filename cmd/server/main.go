@@ -55,6 +55,7 @@ func main() {
 	noteRepo := repositories.NewNoteRepository(db)
 	folderRepo := repositories.NewNoteFolderRepository(db)
 	chatRepo := repositories.NewChatRepository(db)
+	settingsRepo := repositories.NewUserSettingsRepository(db)
 
 	// Initialize services
 	projectService := services.NewProjectService(projectRepo, listRepo, taskRepo, userRepo)
@@ -64,7 +65,8 @@ func main() {
 	canvasService := services.NewCanvasService(canvasRepo, projectRepo)
 	noteService := services.NewNoteService(noteRepo, projectRepo)
 	folderService := services.NewNoteFolderService(folderRepo, projectRepo)
-	chatService := services.NewChatService(chatRepo, projectRepo)
+	chatService := services.NewChatService(chatRepo, projectRepo, userRepo)
+	settingsService := services.NewUserSettingsService(settingsRepo)
 
 	// Initialize handlers
 	projectHandler := handlers.NewProjectHandler(projectService)
@@ -75,6 +77,7 @@ func main() {
 	noteHandler := handlers.NewNoteHandler(noteService)
 	folderHandler := handlers.NewNoteFolderHandler(folderService)
 	chatHandler := handlers.NewChatHandler(chatService)
+	settingsHandler := handlers.NewUserSettingsHandler(settingsService)
 
 	// AI project creation handler
 	aiProjectHandler := handlers.NewAIProjectCreationHandler(projectService, listService, taskService, canvasService, chatService)
@@ -87,7 +90,7 @@ func main() {
 	router := setupRouter(cfg)
 
 	// Setup routes
-	routes.SetupRoutes(router, projectHandler, listHandler, taskHandler, canvasHandler, noteHandler, folderHandler, chatHandler, authHandler, aiProjectHandler, authService, projectRepo, db)
+	routes.SetupRoutes(router, projectHandler, listHandler, taskHandler, canvasHandler, noteHandler, folderHandler, chatHandler, authHandler, aiProjectHandler, settingsHandler, authService, projectRepo, db)
 
 	// Create server
 	server := &http.Server{
