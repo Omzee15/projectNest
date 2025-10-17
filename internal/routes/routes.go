@@ -143,12 +143,6 @@ func SetupRoutes(r *gin.Engine, projectHandler *handlers.ProjectHandler, listHan
 				settings.POST("/reset", settingsHandler.ResetUserSettings)
 			}
 
-			// Theme routes (public - no auth needed for theme list)
-			themes := api.Group("/themes")
-			{
-				themes.GET("", settingsHandler.GetAvailableThemes)
-			}
-
 			// AI project creation routes
 			ai := protected.Group("/ai")
 			{

@@ -392,6 +392,28 @@ func (r *projectRepository) AddMember(ctx context.Context, projectID int, userUI
 	return nil
 }
 
+func (r *projectRepository) RemoveMember(ctx context.Context, projectID int, userUID uuid.UUID) error {
+	// Get user by UUID to get the integer ID
+	user, err := r.userRepo.GetByUID(ctx, userUID)
+	if err != nil {
+		return fmt.Errorf("failed to get user: %w", err)
+	}
+	if user == nil {
+		return fmt.Errorf("user not found")
+	}
+
+	query := `
+		DELETE FROM project_member 
+		WHERE project_id = $1 AND user_id = $2`
+
+	_, err = r.db.Exec(ctx, query, projectID, user.ID)
+	if err != nil {
+		return fmt.Errorf("failed to remove project member: %w", err)
+	}
+
+	return nil
+}
+
 // Helper functions
 func safeStringDeref(s *string) string {
 	if s != nil {

@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"lucid-lists-backend/internal/repositories"
@@ -120,6 +121,18 @@ func ProjectOwnership(projectRepo repositories.ProjectRepository, db *pgxpool.Po
 
 // checkProjectMembership checks if a user is a member of a project
 func checkProjectMembership(ctx context.Context, db *pgxpool.Pool, projectID int, userUID uuid.UUID) (bool, error) {
+	// First get the user's integer ID from their UUID
+	userQuery := `SELECT id FROM users WHERE user_uid = $1 AND is_active = true`
+	var userID int
+	err := db.QueryRow(ctx, userQuery, userUID).Scan(&userID)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return false, nil // User doesn't exist, so not a member
+		}
+		return false, fmt.Errorf("failed to get user ID: %w", err)
+	}
+
+	// Now check membership using the integer user ID
 	query := `
 		SELECT EXISTS(
 			SELECT 1 
@@ -128,7 +141,7 @@ func checkProjectMembership(ctx context.Context, db *pgxpool.Pool, projectID int
 		)`
 
 	var exists bool
-	err := db.QueryRow(ctx, query, projectID, userUID).Scan(&exists)
+	err = db.QueryRow(ctx, query, projectID, userID).Scan(&exists)
 	if err != nil {
 		return false, fmt.Errorf("failed to check membership: %w", err)
 	}

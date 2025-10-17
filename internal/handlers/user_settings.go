@@ -74,38 +74,6 @@ func (h *UserSettingsHandler) UpdateUserSettings(c *gin.Context) {
 	utils.SuccessResponse(c, settings, "Settings updated successfully")
 }
 
-// GetAvailableThemes returns a list of available themes
-func (h *UserSettingsHandler) GetAvailableThemes(c *gin.Context) {
-	themes := []map[string]interface{}{
-		{
-			"name":        "ProjectNest Default",
-			"key":         "projectnest-default",
-			"type":        "light",
-			"description": "Clean monochrome light theme",
-		},
-		{
-			"name":        "ProjectNest Dark",
-			"key":         "projectnest-dark",
-			"type":        "dark",
-			"description": "Clean monochrome dark theme",
-		},
-		{
-			"name":        "ProjectNest Light",
-			"key":         "projectnest-light",
-			"type":        "light",
-			"description": "Bright light theme with enhanced contrast",
-		},
-		{
-			"name":        "GitHub Dark",
-			"key":         "github-dark",
-			"type":        "dark",
-			"description": "GitHub's official dark theme",
-		},
-	}
-
-	utils.SuccessResponse(c, themes, "Available themes retrieved successfully")
-}
-
 // ResetUserSettings resets the current user's settings to defaults
 func (h *UserSettingsHandler) ResetUserSettings(c *gin.Context) {
 	// Get user ID from context (set by auth middleware)

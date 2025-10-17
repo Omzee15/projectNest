@@ -112,8 +112,7 @@ func (s *UserSettingsService) UpdateUserSettings(ctx context.Context, userID int
 		validThemes := []string{
 			"projectnest-default",
 			"projectnest-dark",
-			"projectnest-light",
-			"github-dark",
+			"solarized-light",
 		}
 
 		isValid := false

@@ -47,7 +47,7 @@ func main() {
 
 	// Initialize repositories
 	userRepo := repositories.NewUserRepository(db)
-	projectRepo := repositories.NewProjectRepository(db)
+	projectRepo := repositories.NewProjectRepository(db, userRepo)
 	listRepo := repositories.NewListRepository(db)
 	taskRepo := repositories.NewTaskRepository(db)
 	// Phase 3: Brainstorming & Planning Layer repositories
