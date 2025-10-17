@@ -321,28 +321,28 @@ type ProjectMemberResponse struct {
 
 // User Settings DTOs
 type UserSettingsRequest struct {
-	Theme               *string `json:"theme" validate:"omitempty,min=1,max=100"`
-	Language            *string `json:"language" validate:"omitempty,len=2"`
-	Timezone            *string `json:"timezone" validate:"omitempty,min=1,max=100"`
-	NotificationsEnabled *bool  `json:"notifications_enabled"`
-	EmailNotifications   *bool  `json:"email_notifications"`
-	SoundEnabled         *bool  `json:"sound_enabled"`
-	CompactMode          *bool  `json:"compact_mode"`
-	AutoSave             *bool  `json:"auto_save"`
-	AutoSaveInterval     *int   `json:"auto_save_interval" validate:"omitempty,min=10,max=600"`
+	Theme                *string `json:"theme" validate:"omitempty,min=1,max=100"`
+	Language             *string `json:"language" validate:"omitempty,len=2"`
+	Timezone             *string `json:"timezone" validate:"omitempty,min=1,max=100"`
+	NotificationsEnabled *bool   `json:"notifications_enabled"`
+	EmailNotifications   *bool   `json:"email_notifications"`
+	SoundEnabled         *bool   `json:"sound_enabled"`
+	CompactMode          *bool   `json:"compact_mode"`
+	AutoSave             *bool   `json:"auto_save"`
+	AutoSaveInterval     *int    `json:"auto_save_interval" validate:"omitempty,min=10,max=600"`
 }
 
 type UserSettingsResponse struct {
-	SettingsUID         uuid.UUID `json:"settings_uid"`
-	Theme               string    `json:"theme"`
-	Language            string    `json:"language"`
-	Timezone            string    `json:"timezone"`
-	NotificationsEnabled bool     `json:"notifications_enabled"`
-	EmailNotifications   bool     `json:"email_notifications"`
-	SoundEnabled         bool     `json:"sound_enabled"`
-	CompactMode          bool     `json:"compact_mode"`
-	AutoSave             bool     `json:"auto_save"`
-	AutoSaveInterval     int      `json:"auto_save_interval"`
-	CreatedAt           time.Time `json:"created_at"`
-	UpdatedAt           time.Time `json:"updated_at"`
+	SettingsUID          uuid.UUID `json:"settings_uid"`
+	Theme                string    `json:"theme"`
+	Language             string    `json:"language"`
+	Timezone             string    `json:"timezone"`
+	NotificationsEnabled bool      `json:"notifications_enabled"`
+	EmailNotifications   bool      `json:"email_notifications"`
+	SoundEnabled         bool      `json:"sound_enabled"`
+	CompactMode          bool      `json:"compact_mode"`
+	AutoSave             bool      `json:"auto_save"`
+	AutoSaveInterval     int       `json:"auto_save_interval"`
+	CreatedAt            time.Time `json:"created_at"`
+	UpdatedAt            time.Time `json:"updated_at"`
 }

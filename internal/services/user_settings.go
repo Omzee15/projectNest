@@ -59,7 +59,7 @@ func (s *UserSettingsService) GetUserSettings(ctx context.Context, userID int) (
 		if err := s.InitializeDefaultSettings(ctx, userID); err != nil {
 			return nil, fmt.Errorf("failed to initialize default settings: %w", err)
 		}
-		
+
 		// Fetch the newly created settings
 		settings, err = s.repo.GetByUserID(ctx, userID)
 		if err != nil {
@@ -115,7 +115,7 @@ func (s *UserSettingsService) UpdateUserSettings(ctx context.Context, userID int
 			"projectnest-light",
 			"github-dark",
 		}
-		
+
 		isValid := false
 		for _, theme := range validThemes {
 			if *request.Theme == theme {
@@ -123,7 +123,7 @@ func (s *UserSettingsService) UpdateUserSettings(ctx context.Context, userID int
 				break
 			}
 		}
-		
+
 		if !isValid {
 			return nil, fmt.Errorf("invalid theme: %s", *request.Theme)
 		}
@@ -139,7 +139,7 @@ func (s *UserSettingsService) UpdateUserSettings(ctx context.Context, userID int
 				break
 			}
 		}
-		
+
 		if !isValid {
 			return nil, fmt.Errorf("invalid language: %s", *request.Language)
 		}

@@ -152,30 +152,30 @@ type ChatConversation struct {
 }
 
 type ChatMessage struct {
-	ID             int        `db:"id"`
-	MessageUID     uuid.UUID  `db:"message_uid"`
-	ConversationID int        `db:"conversation_id"`
-	MessageType    string     `db:"message_type"` // 'user' or 'ai'
-	Content        string     `db:"content"`
-	CreatedAt      time.Time  `db:"created_at"`
-	CreatedBy      *int       `db:"created_by"`
+	ID             int       `db:"id"`
+	MessageUID     uuid.UUID `db:"message_uid"`
+	ConversationID int       `db:"conversation_id"`
+	MessageType    string    `db:"message_type"` // 'user' or 'ai'
+	Content        string    `db:"content"`
+	CreatedAt      time.Time `db:"created_at"`
+	CreatedBy      *int      `db:"created_by"`
 }
 
 type UserSettings struct {
-	ID              int        `db:"id"`
-	SettingsUID     uuid.UUID  `db:"settings_uid"`
-	UserID          int        `db:"user_id"`
-	Theme           string     `db:"theme"`           // theme name (e.g., "projectnest-default", "projectnest-dark", "github-dark")
-	Language        string     `db:"language"`        // preferred language (e.g., "en", "es", "fr")
-	Timezone        string     `db:"timezone"`        // user timezone (e.g., "America/New_York")
-	NotificationsEnabled bool  `db:"notifications_enabled"`
-	EmailNotifications  bool   `db:"email_notifications"`
-	SoundEnabled        bool   `db:"sound_enabled"`
-	CompactMode         bool   `db:"compact_mode"`    // compact UI mode
-	AutoSave            bool   `db:"auto_save"`       // auto-save feature
-	AutoSaveInterval    int    `db:"auto_save_interval"` // in seconds
-	CreatedAt       time.Time  `db:"created_at"`
-	UpdatedAt       time.Time  `db:"updated_at"`
+	ID                   int       `db:"id"`
+	SettingsUID          uuid.UUID `db:"settings_uid"`
+	UserID               int       `db:"user_id"`
+	Theme                string    `db:"theme"`    // theme name (e.g., "projectnest-default", "projectnest-dark", "github-dark")
+	Language             string    `db:"language"` // preferred language (e.g., "en", "es", "fr")
+	Timezone             string    `db:"timezone"` // user timezone (e.g., "America/New_York")
+	NotificationsEnabled bool      `db:"notifications_enabled"`
+	EmailNotifications   bool      `db:"email_notifications"`
+	SoundEnabled         bool      `db:"sound_enabled"`
+	CompactMode          bool      `db:"compact_mode"`       // compact UI mode
+	AutoSave             bool      `db:"auto_save"`          // auto-save feature
+	AutoSaveInterval     int       `db:"auto_save_interval"` // in seconds
+	CreatedAt            time.Time `db:"created_at"`
+	UpdatedAt            time.Time `db:"updated_at"`
 }
 
 // Additional models for complete database coverage

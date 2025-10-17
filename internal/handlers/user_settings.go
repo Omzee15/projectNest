@@ -3,10 +3,11 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/gin-gonic/gin"
 	"lucid-lists-backend/internal/models"
 	"lucid-lists-backend/internal/services"
 	"lucid-lists-backend/internal/utils"
+
+	"github.com/gin-gonic/gin"
 )
 
 type UserSettingsHandler struct {
@@ -21,7 +22,7 @@ func NewUserSettingsHandler(service *services.UserSettingsService) *UserSettings
 
 // GetUserSettings retrieves the current user's settings
 func (h *UserSettingsHandler) GetUserSettings(c *gin.Context) {
-	// Get user ID from context (set by auth middleware) 
+	// Get user ID from context (set by auth middleware)
 	userIDInterface, exists := c.Get("user_id")
 	if !exists {
 		utils.ErrorResponse(c, http.StatusUnauthorized, "User not authenticated")
