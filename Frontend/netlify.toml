@@ -5,15 +5,13 @@
   # Directory where the built files are located
   publish = "dist"
   
-  # Build command with memory optimization
-  command = "npm run build"
+  # Build command with clean install and memory optimization
+  command = "npm ci --include=optional && npm run build"
   
   # Environment variables for build
   [build.environment]
     # Increase Node memory limit to prevent out-of-memory errors
     NODE_OPTIONS = "--max_old_space_size=4096"
-    # Use npm ci for faster, more reliable installs
-    NPM_FLAGS = "--legacy-peer-deps"
 
 # Redirect all requests to index.html for client-side routing (SPA)
 [[redirects]]
