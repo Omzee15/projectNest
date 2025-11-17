@@ -107,7 +107,7 @@ Mainly give short and to the point answers, until it is something you have to ex
       if (!genAI || !selectedConversation || !project) return;
 
       try {
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
         // Create enhanced system prompt with project context
         const enhancedSystemPrompt = `${SYSTEM_PROMPT}

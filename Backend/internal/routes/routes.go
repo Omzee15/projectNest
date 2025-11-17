@@ -22,12 +22,12 @@ func SetupRoutes(r *gin.Engine, projectHandler *handlers.ProjectHandler, listHan
 	// Root route for service info
 	r.GET("/", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
-			"service":     "ProjectNest Backend API",
-			"status":      "running",
-			"version":     "1.0.0",
-			"health_url":  "/health",
-			"api_prefix":  "/api",
-			"timestamp":   time.Now().UTC(),
+			"service":    "ProjectNest Backend API",
+			"status":     "running",
+			"version":    "1.0.0",
+			"health_url": "/health",
+			"api_prefix": "/api",
+			"timestamp":  time.Now().UTC(),
 		})
 	})
 
