@@ -59,6 +59,16 @@ type TaskRepository interface {
 	CountCompletedByProjectUID(ctx context.Context, projectUID uuid.UUID) (int64, error)
 }
 
+// TaskAssigneeRepository defines the interface for task assignee operations
+type TaskAssigneeRepository interface {
+	GetByTaskID(ctx context.Context, taskID int) ([]models.TaskAssigneeResponse, error)
+	GetByTaskUID(ctx context.Context, taskUID uuid.UUID) ([]models.TaskAssigneeResponse, error)
+	AssignUser(ctx context.Context, taskID int, userID int) error
+	UnassignUser(ctx context.Context, taskID int, userID int) error
+	BulkAssign(ctx context.Context, taskID int, userIDs []int) error
+	RemoveAllAssignees(ctx context.Context, taskID int) error
+}
+
 // Phase 3: Brainstorming & Planning Layer Repository Interfaces
 
 // CanvasRepository defines the interface for brainstorm canvas data operations

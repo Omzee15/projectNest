@@ -50,6 +50,7 @@ func main() {
 	projectRepo := repositories.NewProjectRepository(db, userRepo)
 	listRepo := repositories.NewListRepository(db)
 	taskRepo := repositories.NewTaskRepository(db)
+	taskAssigneeRepo := repositories.NewTaskAssigneeRepository(db)
 	// Phase 3: Brainstorming & Planning Layer repositories
 	canvasRepo := repositories.NewCanvasRepository(db)
 	noteRepo := repositories.NewNoteRepository(db)
@@ -71,7 +72,8 @@ func main() {
 	// Initialize handlers
 	projectHandler := handlers.NewProjectHandler(projectService)
 	listHandler := handlers.NewListHandler(listService)
-	taskHandler := handlers.NewTaskHandler(taskService)
+	taskHandler := handlers.NewTaskHandlerWithRepos(taskService, taskRepo, taskAssigneeRepo, userRepo)
+	taskAssigneeHandler := handlers.NewTaskAssigneeHandler(taskAssigneeRepo, taskRepo, userRepo)
 	// Phase 3: Brainstorming & Planning Layer handlers
 	canvasHandler := handlers.NewCanvasHandler(canvasService)
 	noteHandler := handlers.NewNoteHandler(noteService)
@@ -90,7 +92,7 @@ func main() {
 	router := setupRouter(cfg)
 
 	// Setup routes
-	routes.SetupRoutes(router, projectHandler, listHandler, taskHandler, canvasHandler, noteHandler, folderHandler, chatHandler, authHandler, aiProjectHandler, settingsHandler, authService, projectRepo, db)
+	routes.SetupRoutes(router, projectHandler, listHandler, taskHandler, taskAssigneeHandler, canvasHandler, noteHandler, folderHandler, chatHandler, authHandler, aiProjectHandler, settingsHandler, authService, projectRepo, db)
 
 	// Create server
 	server := &http.Server{

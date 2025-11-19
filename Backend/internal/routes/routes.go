@@ -15,7 +15,7 @@ import (
 )
 
 // SetupRoutes configures all the routes for the application
-func SetupRoutes(r *gin.Engine, projectHandler *handlers.ProjectHandler, listHandler *handlers.ListHandler, taskHandler *handlers.TaskHandler, canvasHandler *handlers.CanvasHandler, noteHandler *handlers.NoteHandler, folderHandler *handlers.NoteFolderHandler, chatHandler *handlers.ChatHandler, authHandler *handlers.AuthHandler, aiProjectHandler *handlers.AIProjectCreationHandler, settingsHandler *handlers.UserSettingsHandler, authService *services.AuthService, projectRepo repositories.ProjectRepository, db *pgxpool.Pool) {
+func SetupRoutes(r *gin.Engine, projectHandler *handlers.ProjectHandler, listHandler *handlers.ListHandler, taskHandler *handlers.TaskHandler, taskAssigneeHandler *handlers.TaskAssigneeHandler, canvasHandler *handlers.CanvasHandler, noteHandler *handlers.NoteHandler, folderHandler *handlers.NoteFolderHandler, chatHandler *handlers.ChatHandler, authHandler *handlers.AuthHandler, aiProjectHandler *handlers.AIProjectCreationHandler, settingsHandler *handlers.UserSettingsHandler, authService *services.AuthService, projectRepo repositories.ProjectRepository, db *pgxpool.Pool) {
 	// Add middleware
 	r.Use(middleware.RequestLogging())
 
@@ -116,6 +116,12 @@ func SetupRoutes(r *gin.Engine, projectHandler *handlers.ProjectHandler, listHan
 				tasks.PATCH("/:uid", taskHandler.PartialUpdateTask)
 				tasks.DELETE("/:uid", taskHandler.DeleteTask)
 				tasks.POST("/:uid/move", taskHandler.MoveTask)
+
+				// Task assignee routes
+				tasks.GET("/:uid/assignees", taskAssigneeHandler.GetTaskAssignees)
+				tasks.POST("/:uid/assignees", taskAssigneeHandler.AssignUserToTask)
+				tasks.DELETE("/:uid/assignees/:userUid", taskAssigneeHandler.UnassignUserFromTask)
+				tasks.POST("/:uid/assignees/bulk", taskAssigneeHandler.BulkAssignUsersToTask)
 			}
 
 			// Phase 3: Note routes (individual note operations)

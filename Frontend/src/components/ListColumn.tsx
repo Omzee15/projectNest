@@ -34,6 +34,7 @@ import { useState } from 'react';
 
 interface ListColumnProps {
   list: ListWithTasks;
+  projectId: string;
   onTaskClick?: (taskId: string) => void;
   onAddTask?: (listUid: string, taskData: any) => void;
   onListDelete?: (listUid: string) => void;
@@ -45,7 +46,8 @@ interface ListColumnProps {
 }
 
 export function ListColumn({ 
-  list, 
+  list,
+  projectId,
   onTaskClick, 
   onAddTask, 
   onListDelete, 
@@ -252,6 +254,7 @@ export function ListColumn({
         <CreateTaskDialog
           listUid={list.list_uid}
           listName={list.name}
+          projectId={projectId}
           onTaskCreate={(taskData) => onAddTask?.(list.list_uid, taskData)}
         />
       </CardContent>
@@ -265,6 +268,7 @@ export function ListColumn({
 
       <EditTaskDialog
         task={editingTask}
+        projectId={projectId}
         open={showEditTaskDialog}
         onOpenChange={(open) => {
           setShowEditTaskDialog(open);

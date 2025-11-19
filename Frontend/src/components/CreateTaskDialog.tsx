@@ -9,21 +9,24 @@ import { ColorPicker } from '@/components/ui/color-picker';
 import { Plus, Calendar, Flag } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { COLORS } from '@/types';
+import { TaskAssigneeSelector } from './TaskAssigneeSelector';
 
 interface CreateTaskDialogProps {
   listUid: string;
   listName: string;
+  projectId: string;
   onTaskCreate?: (taskData: any) => void;
   trigger?: React.ReactNode;
 }
 
-export function CreateTaskDialog({ listUid, listName, onTaskCreate, trigger }: CreateTaskDialogProps) {
+export function CreateTaskDialog({ listUid, listName, projectId, onTaskCreate, trigger }: CreateTaskDialogProps) {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState('medium');
   const [color, setColor] = useState<string>(COLORS.WHITE);
   const [dueDate, setDueDate] = useState('');
+  const [assignedUserIds, setAssignedUserIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
@@ -50,6 +53,7 @@ export function CreateTaskDialog({ listUid, listName, onTaskCreate, trigger }: C
         color,
         status: 'todo',
         due_date: dueDate || undefined,
+        assigned_user_ids: assignedUserIds.length > 0 ? assignedUserIds : undefined,
       };
 
       // Call callback with the task data - parent will handle API call
@@ -61,6 +65,7 @@ export function CreateTaskDialog({ listUid, listName, onTaskCreate, trigger }: C
       setPriority('medium');
       setColor(COLORS.WHITE);
       setDueDate('');
+      setAssignedUserIds([]);
       setOpen(false);
 
       toast({
@@ -93,7 +98,7 @@ export function CreateTaskDialog({ listUid, listName, onTaskCreate, trigger }: C
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto bg-background border border-border">
+      <DialogContent className="sm:max-w-[600px] md:max-w-[650px] max-h-[85vh] overflow-y-auto bg-background border border-border">
         <DialogHeader>
           <DialogTitle>Create New Task</DialogTitle>
         </DialogHeader>
@@ -131,6 +136,16 @@ export function CreateTaskDialog({ listUid, listName, onTaskCreate, trigger }: C
                 size="md"
               />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Assign To</Label>
+            <TaskAssigneeSelector
+              projectId={projectId}
+              selectedUserIds={assignedUserIds}
+              onSelectionChange={setAssignedUserIds}
+              disabled={isLoading}
+            />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

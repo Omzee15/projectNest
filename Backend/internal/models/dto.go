@@ -67,30 +67,48 @@ type ListWithTasksResponse struct {
 }
 
 type TaskRequest struct {
-	ListUID     uuid.UUID  `json:"list_uid" validate:"required"`
-	Title       string     `json:"title" validate:"required,min=1,max=255"`
-	Description *string    `json:"description"`
-	Priority    *string    `json:"priority" validate:"omitempty,oneof=low medium high"`
-	Status      string     `json:"status" validate:"oneof=todo in_progress completed"`
-	Color       string     `json:"color" validate:"omitempty,len=7,startswith=#"`
-	Position    *int       `json:"position" validate:"omitempty,min=0"`
-	IsCompleted *bool      `json:"is_completed"`
-	DueDate     *time.Time `json:"due_date"`
+	ListUID           uuid.UUID   `json:"list_uid" validate:"required"`
+	Title             string      `json:"title" validate:"required,min=1,max=255"`
+	Description       *string     `json:"description"`
+	Priority          *string     `json:"priority" validate:"omitempty,oneof=low medium high"`
+	Status            string      `json:"status" validate:"oneof=todo in_progress completed"`
+	Color             string      `json:"color" validate:"omitempty,len=7,startswith=#"`
+	Position          *int        `json:"position" validate:"omitempty,min=0"`
+	IsCompleted       *bool       `json:"is_completed"`
+	DueDate           *time.Time  `json:"due_date"`
+	AssignedUserIDs   []uuid.UUID `json:"assigned_user_ids,omitempty"`
 }
 
 type TaskResponse struct {
-	TaskUID     uuid.UUID  `json:"task_uid"`
-	Title       string     `json:"title"`
-	Description *string    `json:"description"`
-	Priority    *string    `json:"priority"`
-	Status      string     `json:"status"`
-	Color       string     `json:"color"`
-	Position    *int       `json:"position"`
-	IsCompleted bool       `json:"is_completed"`
-	DueDate     *time.Time `json:"due_date"`
-	CompletedAt *time.Time `json:"completed_at"`
-	CreatedAt   time.Time  `json:"created_at"`
-	UpdatedAt   *time.Time `json:"updated_at"`
+	TaskUID     uuid.UUID                `json:"task_uid"`
+	Title       string                   `json:"title"`
+	Description *string                  `json:"description"`
+	Priority    *string                  `json:"priority"`
+	Status      string                   `json:"status"`
+	Color       string                   `json:"color"`
+	Position    *int                     `json:"position"`
+	IsCompleted bool                     `json:"is_completed"`
+	DueDate     *time.Time               `json:"due_date"`
+	CompletedAt *time.Time               `json:"completed_at"`
+	CreatedAt   time.Time                `json:"created_at"`
+	UpdatedAt   *time.Time               `json:"updated_at"`
+	Assignees   []TaskAssigneeResponse   `json:"assignees,omitempty"`
+}
+
+// Task Assignee DTOs
+type TaskAssigneeResponse struct {
+	UserUID    uuid.UUID `json:"user_uid"`
+	Name       string    `json:"name"`
+	Email      string    `json:"email"`
+	AssignedAt time.Time `json:"assigned_at"`
+}
+
+type AssignTaskRequest struct {
+	UserUID uuid.UUID `json:"user_uid" validate:"required"`
+}
+
+type BulkAssignTaskRequest struct {
+	UserUIDs []uuid.UUID `json:"user_uids" validate:"required,min=1"`
 }
 
 type MoveTaskRequest struct {

@@ -65,12 +65,20 @@ export interface Task {
   updated_at?: string;
   updated_by?: string;
   is_active: boolean;
+  assignees?: TaskAssigneeWithUser[];
 }
 
 export interface TaskAssignee {
   id: number;
   task_id: number;
   user_id: string;
+  assigned_at: string;
+}
+
+export interface TaskAssigneeWithUser {
+  user_uid: string;
+  name: string;
+  email: string;
   assigned_at: string;
 }
 

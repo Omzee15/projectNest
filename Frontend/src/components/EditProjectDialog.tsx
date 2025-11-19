@@ -18,13 +18,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ColorPicker } from '@/components/ui/color-picker';
-import { Loader2, Settings, Users } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { Project, ProjectUpdateRequest } from '@/types';
 import { apiService } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
-import { ProjectMembersList } from './ProjectMembersList';
 
 interface EditProjectDialogProps {
   project?: Project;
@@ -131,23 +129,11 @@ export function EditProjectDialog({ project, open, onOpenChange, onProjectUpdate
         <DialogHeader>
           <DialogTitle>Edit Project</DialogTitle>
           <DialogDescription>
-            Update project details and manage team members.
+            Update project details.
           </DialogDescription>
         </DialogHeader>
         
-        <Tabs defaultValue="settings" className="flex-1 overflow-hidden flex flex-col">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="settings" className="flex items-center gap-2">
-              <Settings className="h-4 w-4" />
-              Settings
-            </TabsTrigger>
-            <TabsTrigger value="members" className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              Members
-            </TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="settings" className="flex-1 overflow-y-auto mt-4">
+        <div className="flex-1 overflow-y-auto mt-4">
             <form onSubmit={handleSubmit} className="space-y-4 pr-2">
               <div className="space-y-2">
                 <Label htmlFor="name">Name *</Label>
@@ -241,16 +227,7 @@ export function EditProjectDialog({ project, open, onOpenChange, onProjectUpdate
                 </Button>
               </DialogFooter>
             </form>
-          </TabsContent>
-
-          <TabsContent value="members" className="flex-1 overflow-y-auto mt-4">
-            {project && (
-              <div className="pr-2">
-                <ProjectMembersList projectId={project.project_uid} />
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
+          </div>
       </DialogContent>
     </Dialog>
   );

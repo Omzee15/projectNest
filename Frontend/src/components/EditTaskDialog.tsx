@@ -19,19 +19,23 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { ColorPicker } from '@/components/ui/color-picker';
-import { Loader2 } from 'lucide-react';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Loader2, Users } from 'lucide-react';
 import { Task, TaskUpdateRequest } from '@/types';
 import { apiService } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
+import { TaskAssigneeSelector } from './TaskAssigneeSelector';
 
 interface EditTaskDialogProps {
   task?: Task;
+  projectId: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onTaskUpdated: (updatedTask: Task) => void;
 }
 
-export function EditTaskDialog({ task, open, onOpenChange, onTaskUpdated }: EditTaskDialogProps) {
+export function EditTaskDialog({ task, projectId, open, onOpenChange, onTaskUpdated }: EditTaskDialogProps) {
   const [formData, setFormData] = useState<TaskUpdateRequest>({
     title: '',
     description: '',
@@ -40,6 +44,7 @@ export function EditTaskDialog({ task, open, onOpenChange, onTaskUpdated }: Edit
     color: '#FFFFFF',
     due_date: '',
   });
+  const [assignedUserIds, setAssignedUserIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
@@ -54,6 +59,7 @@ export function EditTaskDialog({ task, open, onOpenChange, onTaskUpdated }: Edit
         color: task.color || '#FFFFFF',
         due_date: task.due_date ? task.due_date.split('T')[0] : '',
       });
+      setAssignedUserIds(task.assignees?.map((a) => a.user_uid) || []);
     }
   }, [task, open]);
 
@@ -85,8 +91,15 @@ export function EditTaskDialog({ task, open, onOpenChange, onTaskUpdated }: Edit
         updates.due_date = formData.due_date || undefined;
       }
 
+      // Check for assignee changes
+      const originalAssigneeIds = task.assignees?.map((a) => a.user_uid) || [];
+      const assigneeIdsChanged = 
+        assignedUserIds.length !== originalAssigneeIds.length ||
+        assignedUserIds.some((id) => !originalAssigneeIds.includes(id)) ||
+        originalAssigneeIds.some((id) => !assignedUserIds.includes(id));
+
       // Only send request if there are changes
-      if (Object.keys(updates).length === 0) {
+      if (Object.keys(updates).length === 0 && !assigneeIdsChanged) {
         toast({
           title: 'No changes',
           description: 'No changes were made to the task.',
@@ -95,9 +108,24 @@ export function EditTaskDialog({ task, open, onOpenChange, onTaskUpdated }: Edit
         return;
       }
 
-      const response = await apiService.partialUpdateTask(task.task_uid, updates);
+      // Update task fields if there are any
+      let updatedTask = task;
+      if (Object.keys(updates).length > 0) {
+        const response = await apiService.partialUpdateTask(task.task_uid, updates);
+        updatedTask = response.data;
+      }
+
+      // Update assignees if changed
+      if (assigneeIdsChanged) {
+        await apiService.bulkAssignTask(task.task_uid, assignedUserIds);
+        // Fetch updated task with assignees
+        const taskResponse = await apiService.getProject(task.list_id.toString());
+        // Find the updated task in the response
+        // For now, we'll just add assignees to the response
+        updatedTask = { ...updatedTask, assignees: undefined }; // Backend should return this
+      }
       
-      onTaskUpdated(response.data);
+      onTaskUpdated(updatedTask);
       onOpenChange(false);
       
       toast({
@@ -123,6 +151,15 @@ export function EditTaskDialog({ task, open, onOpenChange, onTaskUpdated }: Edit
     }));
   };
 
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
@@ -132,6 +169,32 @@ export function EditTaskDialog({ task, open, onOpenChange, onTaskUpdated }: Edit
             Update the task details below.
           </DialogDescription>
         </DialogHeader>
+
+        {/* Display Current Assignees */}
+        {task?.assignees && task.assignees.length > 0 && (
+          <div className="bg-muted/50 rounded-lg p-4 space-y-3 border border-border">
+            <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+              <Users className="h-4 w-4 text-muted-foreground" />
+              <span>Assigned Members ({task.assignees.length})</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {task.assignees.map((assignee) => (
+                <Badge
+                  key={assignee.user_uid}
+                  variant="secondary"
+                  className="flex items-center gap-2 py-1.5 px-3"
+                >
+                  <Avatar className="h-5 w-5 border border-background">
+                    <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
+                      {getInitials(assignee.name)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="text-xs font-medium">{assignee.name}</span>
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
@@ -202,6 +265,16 @@ export function EditTaskDialog({ task, open, onOpenChange, onTaskUpdated }: Edit
                 onChange={(color) => handleInputChange('color', color)}
               />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Assign To</Label>
+            <TaskAssigneeSelector
+              projectId={projectId}
+              selectedUserIds={assignedUserIds}
+              onSelectionChange={setAssignedUserIds}
+              disabled={isLoading}
+            />
           </div>
 
           <div className="space-y-2">

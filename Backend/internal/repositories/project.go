@@ -122,11 +122,14 @@ func (r *projectRepository) GetWithLists(ctx context.Context, uid uuid.UUID) (*m
 			l.created_at, l.created_by, l.updated_at, l.updated_by, l.is_active,
 			t.id, t.task_uid, t.list_id, t.title, t.description, t.priority, 
 			t.status, t.color, t.position, t.is_completed, t.due_date, t.completed_at,
-			t.created_at, t.created_by, t.updated_at, t.updated_by, t.is_active
+			t.created_at, t.created_by, t.updated_at, t.updated_by, t.is_active,
+			u.id, u.user_uid, u.email, u.name
 		FROM list l
 		LEFT JOIN task t ON l.id = t.list_id AND t.is_active = true
+		LEFT JOIN task_assignee ta ON t.id = ta.task_id
+		LEFT JOIN users u ON ta.user_id = u.id
 		WHERE l.project_id = $1 AND l.is_active = true
-		ORDER BY l.position ASC, COALESCE(t.position, 999999) ASC, t.created_at ASC
+		ORDER BY l.position ASC, COALESCE(t.position, 999999) ASC, t.created_at ASC, u.name ASC
 	`
 
 	rows, err := r.db.Query(ctx, query, project.ID)
@@ -136,6 +139,7 @@ func (r *projectRepository) GetWithLists(ctx context.Context, uid uuid.UUID) (*m
 	defer rows.Close()
 
 	listsMap := make(map[uuid.UUID]*models.ListWithTasksResponse)
+	tasksMap := make(map[uuid.UUID]*models.TaskResponse)
 	var listOrder []uuid.UUID
 
 	for rows.Next() {
@@ -147,6 +151,9 @@ func (r *projectRepository) GetWithLists(ctx context.Context, uid uuid.UUID) (*m
 		var taskPosition *int
 		var taskIsCompleted, taskIsActive *bool
 		var taskDueDate, taskCompletedAt, taskCreatedAt, taskUpdatedAt *time.Time
+		var userID *int
+		var userUID *uuid.UUID
+		var userEmail, userName *string
 
 		err := rows.Scan(
 			&l.ID, &l.ListUID, &l.ProjectID, &l.Name, &l.Color, &l.Position,
@@ -154,6 +161,7 @@ func (r *projectRepository) GetWithLists(ctx context.Context, uid uuid.UUID) (*m
 			&taskID, &taskUID, &taskListID, &taskTitle, &t.Description, &t.Priority,
 			&taskStatus, &taskColor, &taskPosition, &taskIsCompleted, &taskDueDate, &taskCompletedAt,
 			&taskCreatedAt, &taskCreatedBy, &taskUpdatedAt, &taskUpdatedBy, &taskIsActive,
+			&userID, &userUID, &userEmail, &userName,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan list with task: %w", err)
@@ -175,23 +183,44 @@ func (r *projectRepository) GetWithLists(ctx context.Context, uid uuid.UUID) (*m
 			listOrder = append(listOrder, l.ListUID)
 		}
 
-		// Add task if present
+		// Add or update task if present
 		if taskID != nil && taskUID != nil {
-			task := models.TaskResponse{
-				TaskUID:     *taskUID,
-				Title:       safeStringDeref(taskTitle),
-				Description: t.Description,
-				Priority:    t.Priority,
-				Status:      safeStringDeref(taskStatus),
-				Color:       safeStringDeref(taskColor),
-				Position:    taskPosition,
-				IsCompleted: safeBoolDeref(taskIsCompleted),
-				DueDate:     taskDueDate,
-				CompletedAt: taskCompletedAt,
-				CreatedAt:   safeTimeDeref(taskCreatedAt),
-				UpdatedAt:   taskUpdatedAt,
+			// Initialize task if not in map yet
+			if _, exists := tasksMap[*taskUID]; !exists {
+				task := models.TaskResponse{
+					TaskUID:     *taskUID,
+					Title:       safeStringDeref(taskTitle),
+					Description: t.Description,
+					Priority:    t.Priority,
+					Status:      safeStringDeref(taskStatus),
+					Color:       safeStringDeref(taskColor),
+					Position:    taskPosition,
+					IsCompleted: safeBoolDeref(taskIsCompleted),
+					DueDate:     taskDueDate,
+					CompletedAt: taskCompletedAt,
+					CreatedAt:   safeTimeDeref(taskCreatedAt),
+					UpdatedAt:   taskUpdatedAt,
+					Assignees:   []models.TaskAssigneeResponse{},
+				}
+				tasksMap[*taskUID] = &task
+				listsMap[l.ListUID].Tasks = append(listsMap[l.ListUID].Tasks, task)
 			}
-			listsMap[l.ListUID].Tasks = append(listsMap[l.ListUID].Tasks, task)
+
+			// Add assignee if present
+			if userID != nil && userUID != nil {
+				assignee := models.TaskAssigneeResponse{
+					UserUID: *userUID,
+					Email:   safeStringDeref(userEmail),
+					Name:    safeStringDeref(userName),
+				}
+				// Find the task in the list and append assignee
+				for i := range listsMap[l.ListUID].Tasks {
+					if listsMap[l.ListUID].Tasks[i].TaskUID == *taskUID {
+						listsMap[l.ListUID].Tasks[i].Assignees = append(listsMap[l.ListUID].Tasks[i].Assignees, assignee)
+						break
+					}
+				}
+			}
 		}
 	}
 

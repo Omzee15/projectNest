@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"lucid-lists-backend/internal/models"
+	"lucid-lists-backend/internal/repositories"
 	"lucid-lists-backend/internal/services"
 	"lucid-lists-backend/internal/utils"
 
@@ -11,12 +12,25 @@ import (
 )
 
 type TaskHandler struct {
-	taskService *services.TaskService
+	taskService      *services.TaskService
+	taskRepo         repositories.TaskRepository
+	taskAssigneeRepo repositories.TaskAssigneeRepository
+	userRepo         repositories.UserRepository
 }
 
 func NewTaskHandler(taskService *services.TaskService) *TaskHandler {
 	return &TaskHandler{
 		taskService: taskService,
+	}
+}
+
+// NewTaskHandlerWithRepos creates a new TaskHandler with repository dependencies
+func NewTaskHandlerWithRepos(taskService *services.TaskService, taskRepo repositories.TaskRepository, taskAssigneeRepo repositories.TaskAssigneeRepository, userRepo repositories.UserRepository) *TaskHandler {
+	return &TaskHandler{
+		taskService:      taskService,
+		taskRepo:         taskRepo,
+		taskAssigneeRepo: taskAssigneeRepo,
+		userRepo:         userRepo,
 	}
 }
 
@@ -33,6 +47,33 @@ func (h *TaskHandler) CreateTask(c *gin.Context) {
 		logrus.WithError(err).Error("Failed to create task")
 		utils.SendError(c, err)
 		return
+	}
+
+	// Handle task assignees if provided
+	if len(req.AssignedUserIDs) > 0 && h.taskAssigneeRepo != nil && h.userRepo != nil && h.taskRepo != nil {
+		// Get internal task ID
+		taskEntity, err := h.taskRepo.GetByUID(c.Request.Context(), task.TaskUID)
+		if err != nil {
+			logrus.WithError(err).Warn("Failed to get task for assignee assignment")
+		} else {
+			// Convert user UIDs to internal IDs
+			userIDs := make([]int, 0, len(req.AssignedUserIDs))
+			for _, userUID := range req.AssignedUserIDs {
+				user, err := h.userRepo.GetByUID(c.Request.Context(), userUID)
+				if err != nil {
+					logrus.WithError(err).WithField("user_uid", userUID).Warn("User not found, skipping")
+					continue
+				}
+				userIDs = append(userIDs, user.ID)
+			}
+
+			// Bulk assign users
+			if len(userIDs) > 0 {
+				if err := h.taskAssigneeRepo.BulkAssign(c.Request.Context(), taskEntity.ID, userIDs); err != nil {
+					logrus.WithError(err).Warn("Failed to assign users to task")
+				}
+			}
+		}
 	}
 
 	utils.CreatedResponse(c, task, "Task created successfully")

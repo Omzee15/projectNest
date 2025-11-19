@@ -309,6 +309,7 @@ export default function ProjectDashboard() {
       
       <EditTaskDialog
         task={editingTask || undefined}
+        projectId={projectId || ''}
         open={showEditTaskDialog}
         onOpenChange={(open) => {
           setShowEditTaskDialog(open);

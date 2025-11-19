@@ -26,6 +26,8 @@ import { Task } from '@/types';
 import { apiService } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
 import { ColorIndicator } from '@/components/ui/color-picker';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { getCurrentUserUid } from '@/utils/auth';
 import { useState } from 'react';
 
 interface TaskCardProps {
@@ -140,6 +142,34 @@ export function TaskCard({ task, onClick, onTaskDelete, onTaskUpdate, onTaskEdit
     });
   };
 
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  const currentUserUid = getCurrentUserUid();
+  const isAssignedToMe = task.assignees?.some((assignee) => {
+    const match = assignee.user_uid === currentUserUid;
+    return match;
+  });
+  
+  // Debug logging
+  console.log('=== TaskCard Debug ===');
+  console.log('Task:', task.title);
+  console.log('Current User UID:', currentUserUid, 'Type:', typeof currentUserUid);
+  console.log('Task Assignees:', task.assignees);
+  if (task.assignees && task.assignees.length > 0) {
+    task.assignees.forEach(assignee => {
+      console.log('  Assignee UID:', assignee.user_uid, 'Type:', typeof assignee.user_uid, 'Match:', assignee.user_uid === currentUserUid);
+    });
+  }
+  console.log('Is Assigned to Me:', isAssignedToMe);
+  console.log('=====================');
+
   return (
     <Card
       ref={setNodeRef}
@@ -151,6 +181,7 @@ export function TaskCard({ task, onClick, onTaskDelete, onTaskUpdate, onTaskEdit
         ${isDragging ? 'opacity-50 rotate-2 scale-105' : ''}
         ${task.is_completed ? 'opacity-75 bg-muted' : 'bg-card hover:bg-card-hover'}
         ${getStatusBorderClass(task.status)}
+        ${isAssignedToMe ? 'ring-1 ring-primary/50' : ''}
         border-border-light
       `}
       onClick={onClick}
@@ -256,7 +287,7 @@ export function TaskCard({ task, onClick, onTaskDelete, onTaskUpdate, onTaskEdit
         </div>
 
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             {task.priority && (
               <Badge variant="secondary" className="text-xs px-2 py-0.5">
                 <Flag className="w-3 h-3 mr-1" />
@@ -276,6 +307,28 @@ export function TaskCard({ task, onClick, onTaskDelete, onTaskUpdate, onTaskEdit
               >
                 {task.status === 'in_progress' ? 'In Progress' : task.status}
               </Badge>
+            )}
+            {task.assignees && task.assignees.length > 0 && (
+              <div className="flex -space-x-2">
+                {task.assignees.slice(0, 3).map((assignee) => (
+                  <Avatar 
+                    key={assignee.user_uid} 
+                    className="h-6 w-6 border-2 border-background"
+                    title={assignee.name}
+                  >
+                    <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
+                      {getInitials(assignee.name)}
+                    </AvatarFallback>
+                  </Avatar>
+                ))}
+                {task.assignees.length > 3 && (
+                  <Avatar className="h-6 w-6 border-2 border-background">
+                    <AvatarFallback className="text-[10px] bg-muted text-muted-foreground">
+                      +{task.assignees.length - 3}
+                    </AvatarFallback>
+                  </Avatar>
+                )}
+              </div>
             )}
           </div>
 

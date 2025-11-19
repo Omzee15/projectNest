@@ -11,13 +11,6 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { UserPlus, Loader2 } from 'lucide-react';
 import { apiService } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
@@ -35,7 +28,6 @@ export function AddProjectMemberDialog({
 }: AddProjectMemberDialogProps) {
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState('');
-  const [role, setRole] = useState('member');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
@@ -64,15 +56,14 @@ export function AddProjectMemberDialog({
 
     try {
       setIsLoading(true);
-      await apiService.addProjectMember(projectId, email, role);
+      await apiService.addProjectMember(projectId, email, 'member');
 
       toast({
         title: 'Member added!',
-        description: `${email} has been added to the project as ${role}`,
+        description: `${email} has been added to the project`,
       });
 
       setEmail('');
-      setRole('member');
       setOpen(false);
 
       if (onMemberAdded) {
@@ -108,7 +99,7 @@ export function AddProjectMemberDialog({
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[600px]">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>Add Project Member</DialogTitle>
@@ -127,20 +118,8 @@ export function AddProjectMemberDialog({
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={isLoading}
               />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="role">Role</Label>
-              <Select value={role} onValueChange={setRole} disabled={isLoading}>
-                <SelectTrigger id="role">
-                  <SelectValue placeholder="Select a role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="member">Member</SelectItem>
-                  <SelectItem value="owner">Owner</SelectItem>
-                </SelectContent>
-              </Select>
               <p className="text-xs text-muted-foreground">
-                Owners can manage project members and settings
+                The user will be added as a member of this project.
               </p>
             </div>
           </div>

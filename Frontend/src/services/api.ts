@@ -6,6 +6,7 @@ import {
   ListRequest, ListUpdateRequest,
   TaskRequest, TaskUpdateRequest,
   ProjectProgress, ProjectWithProgress,
+  ProjectMember, TaskAssigneeWithUser,
   // Phase 3 types
   BrainstormCanvas, Note, NotesResponse,
   CanvasRequest, NoteRequest, NoteUpdateRequest,
@@ -249,6 +250,31 @@ class ApiService {
     return this.request(`/tasks/${taskUid}/move`, {
       method: 'POST',
       body: JSON.stringify({ list_uid: listUid }),
+    });
+  }
+
+  // Task Assignees
+  async getTaskAssignees(taskUid: string): Promise<ApiResponse<TaskAssigneeWithUser[]>> {
+    return this.request(`/tasks/${taskUid}/assignees`);
+  }
+
+  async assignTaskToUser(taskUid: string, userUid: string): Promise<ApiResponse<void>> {
+    return this.request(`/tasks/${taskUid}/assignees`, {
+      method: 'POST',
+      body: JSON.stringify({ user_uid: userUid }),
+    });
+  }
+
+  async unassignTaskFromUser(taskUid: string, userUid: string): Promise<ApiResponse<void>> {
+    return this.request(`/tasks/${taskUid}/assignees/${userUid}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async bulkAssignTask(taskUid: string, userUids: string[]): Promise<ApiResponse<void>> {
+    return this.request(`/tasks/${taskUid}/assignees/bulk`, {
+      method: 'POST',
+      body: JSON.stringify({ user_uids: userUids }),
     });
   }
 

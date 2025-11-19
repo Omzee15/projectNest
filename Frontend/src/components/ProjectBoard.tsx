@@ -22,12 +22,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Plus, MoreHorizontal, Edit, Palette, FileText, Database, GitBranch, Bot } from 'lucide-react';
+import { Plus, MoreHorizontal, Edit, Palette, FileText, Database, GitBranch, Bot, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ListColumn } from './ListColumn';
 import { TaskCard } from './TaskCard';
 import { CreateListDialog } from './CreateListDialog';
 import { EditProjectDialog } from './EditProjectDialog';
+import { ProjectMembersDialog } from './ProjectMembersDialog';
 import { ColorIndicator } from '@/components/ui/color-picker';
 import { ProjectWithLists, Task, ListWithTasks, Project } from '@/types';
 import { apiService } from '@/services/api';
@@ -312,6 +313,21 @@ export function ProjectBoard({
                 <p className="text-muted-foreground mt-1 ml-8">{project.description}</p>
               )}
             </div>
+            <div className="flex items-center gap-2">
+              <ProjectMembersDialog 
+                projectId={project.project_uid}
+                trigger={
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center gap-2"
+                  >
+                    <Users className="h-4 w-4" />
+                    Members
+                  </Button>
+                }
+              />
+            </div>
           </div>
 
           <SortableContext items={lists.map(list => list.list_uid)} strategy={horizontalListSortingStrategy}>
@@ -320,6 +336,7 @@ export function ProjectBoard({
                 <ListColumn
                   key={list.list_uid}
                   list={list}
+                  projectId={project.project_uid}
                   onTaskClick={onTaskClick}
                   onAddTask={onAddTask}
                   onListDelete={onDeleteList}
@@ -350,6 +367,7 @@ export function ProjectBoard({
             <div className="opacity-95 transform rotate-2">
               <ListColumn
                 list={activeList}
+                projectId={project.project_uid}
                 onTaskClick={onTaskClick}
                 onAddTask={onAddTask}
                 onListDelete={onDeleteList}
