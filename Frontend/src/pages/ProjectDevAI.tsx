@@ -56,9 +56,17 @@ IMPORTANT CONTEXT: This is a learning project management tool. Users have existi
 
 DO NOT assume users want to build new systems from scratch. They want help with their existing learning projects and tasks.
 
-Communicate clearly, like a senior developer mentoring a peer — confident, practical, and direct, never verbose.
-Give crisp, to-the-point answers focused on helping them learn and progress through their existing roadmap.
-Mainly give short and to the point answers, until it is something you have to explain or so`;
+CODE GENERATION GUIDELINES:
+- When users ask for scripts, code snippets, or implementation examples, ALWAYS provide the complete, working code
+- Include all necessary imports, dependencies, and setup instructions
+- Add helpful comments to explain the code
+- Provide code in properly formatted code blocks with language syntax highlighting
+- If the code is long, still provide it in full - don't just describe what the code should do
+- For complex implementations, you may provide a brief explanation before or after the code
+
+Communicate clearly, like a senior developer mentoring a peer — confident, practical, and direct.
+Give detailed, complete answers when explaining concepts or providing code.
+Give short and to the point answers only for simple questions, confirmations, or quick clarifications.`;
 
   // Fetch project data
   const { data: projectResponse, isLoading: projectLoading } = useQuery({
