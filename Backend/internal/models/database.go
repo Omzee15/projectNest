@@ -124,18 +124,52 @@ type NoteFolder struct {
 }
 
 type Note struct {
-	ID          int        `db:"id"`
-	NoteUID     uuid.UUID  `db:"note_uid"`
-	ProjectID   int        `db:"project_id"`
-	FolderID    *int       `db:"folder_id"`
-	Title       string     `db:"title"`
-	ContentJSON string     `db:"content_json"` // JSONB stored as string for rich content
-	Position    *int       `db:"position"`
-	CreatedAt   time.Time  `db:"created_at"`
-	UpdatedAt   *time.Time `db:"updated_at"`
-	CreatedBy   *int       `db:"created_by"`
-	UpdatedBy   *int       `db:"updated_by"`
-	IsActive    bool       `db:"is_active"`
+	ID                    int        `db:"id"`
+	NoteUID               uuid.UUID  `db:"note_uid"`
+	ProjectID             int        `db:"project_id"`
+	FolderID              *int       `db:"folder_id"`
+	Title                 string     `db:"title"`
+	ContentJSON           string     `db:"content_json"` // JSONB stored as string for rich content
+	ContentHTML           string     `db:"content_html"` // Rendered HTML for search/preview
+	Position              *int       `db:"position"`
+	YjsStateVector        []byte     `db:"yjs_state_vector"`          // Yjs state vector for CRDT sync
+	YjsUpdate             []byte     `db:"yjs_update"`                // Latest Yjs update/snapshot
+	LastModifiedByUserUID *uuid.UUID `db:"last_modified_by_user_uid"` // Last modifier's UUID
+	Version               int        `db:"version"`                   // Document version counter
+	CreatedAt             time.Time  `db:"created_at"`
+	UpdatedAt             *time.Time `db:"updated_at"`
+	CreatedBy             *int       `db:"created_by"`
+	UpdatedBy             *int       `db:"updated_by"`
+	IsActive              bool       `db:"is_active"`
+}
+
+// NoteSession tracks active collaborative editing sessions
+type NoteSession struct {
+	ID             int       `db:"id"`
+	SessionUID     uuid.UUID `db:"session_uid"`
+	NoteID         int       `db:"note_id"`
+	UserUID        uuid.UUID `db:"user_uid"`
+	UserName       string    `db:"user_name"`
+	UserEmail      *string   `db:"user_email"`
+	ConnectedAt    time.Time `db:"connected_at"`
+	LastSeenAt     time.Time `db:"last_seen_at"`
+	CursorPosition string    `db:"cursor_position"` // JSONB stored as string
+	IsActive       bool      `db:"is_active"`
+}
+
+// NoteSnapshot stores historical versions of notes
+type NoteSnapshot struct {
+	ID               int        `db:"id"`
+	SnapshotUID      uuid.UUID  `db:"snapshot_uid"`
+	NoteID           int        `db:"note_id"`
+	ContentJSON      string     `db:"content_json"`
+	ContentHTML      *string    `db:"content_html"`
+	YjsStateVector   []byte     `db:"yjs_state_vector"`
+	CreatedAt        time.Time  `db:"created_at"`
+	CreatedByUserUID *uuid.UUID `db:"created_by_user_uid"`
+	Version          int        `db:"version"`
+	SnapshotType     string     `db:"snapshot_type"` // 'auto', 'manual', 'restore_point'
+	Description      *string    `db:"description"`
 }
 
 // Chat Conversation models for DevSprint-AI

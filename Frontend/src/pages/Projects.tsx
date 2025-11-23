@@ -191,8 +191,8 @@ export default function Projects() {
                 >
                   <CardHeader>
                     <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <CardTitle className="text-xl group-hover:text-primary transition-colors">
+                      <div className="flex-1 min-w-0">
+                        <CardTitle className="text-xl group-hover:text-primary transition-colors break-words">
                           {project.name}
                         </CardTitle>
                         <div className="flex items-center gap-2 mt-2">

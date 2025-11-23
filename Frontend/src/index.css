@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import collaborative editor styles */
+@import './styles/editor.css';
+
 /* Zoom Persistence and Stability */
 html {
   /* Prevent unwanted zoom resets */

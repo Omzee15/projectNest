@@ -239,10 +239,10 @@ export function ProjectBoard({
       >
         <div className="h-full p-6">
           <div className="flex items-center justify-between mb-6">
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <div className="flex items-center gap-3">
                 <ColorIndicator color={project.color || '#FFFFFF'} size="md" />
-                <h1 className="text-2xl font-bold text-foreground">{project.name}</h1>
+                <h1 className="text-2xl font-bold text-foreground break-words">{project.name}</h1>
                 <Button
                   variant="outline"
                   size="sm"

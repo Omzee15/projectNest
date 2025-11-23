@@ -212,6 +212,7 @@ type NoteChecklistItem struct {
 type NoteRequest struct {
 	Title       string      `json:"title" validate:"required,min=1,max=255"`
 	ContentJSON NoteContent `json:"content"`
+	ContentHTML *string     `json:"content_html,omitempty"`
 	FolderID    *int        `json:"folder_id,omitempty"`
 	Position    *int        `json:"position,omitempty" validate:"omitempty,min=0"`
 }
@@ -220,19 +221,51 @@ type NoteUpdateRequest struct {
 	Title             *string      `json:"title,omitempty" validate:"omitempty,min=1,max=255"`
 	ContentJSON       *NoteContent `json:"content,omitempty"` // For API layer
 	ContentJSONString *string      `json:"-"`                 // For repository layer (internal use)
+	ContentHTML       *string      `json:"content_html,omitempty"`
 	FolderID          *int         `json:"folder_id,omitempty"`
 	Position          *int         `json:"position,omitempty" validate:"omitempty,min=0"`
+	YjsUpdate         []byte       `json:"-"`                          // Yjs update data (binary)
+	LastModifiedBy    *uuid.UUID   `json:"last_modified_by,omitempty"` // User UUID who made the change
+	Version           *int         `json:"version,omitempty"`          // Document version
 }
 
 type NoteResponse struct {
-	NoteUID     uuid.UUID   `json:"note_uid"`
-	ProjectID   int         `json:"project_id"`
-	Title       string      `json:"title"`
-	ContentJSON NoteContent `json:"content"`
-	FolderID    *int        `json:"folder_id"`
-	Position    *int        `json:"position"`
-	CreatedAt   time.Time   `json:"created_at"`
-	UpdatedAt   *time.Time  `json:"updated_at"`
+	NoteUID             uuid.UUID   `json:"note_uid"`
+	ProjectID           int         `json:"project_id"`
+	Title               string      `json:"title"`
+	ContentJSON         NoteContent `json:"content"`
+	ContentHTML         *string     `json:"content_html,omitempty"`
+	FolderID            *int        `json:"folder_id"`
+	Position            *int        `json:"position"`
+	Version             int         `json:"version"`
+	LastModifiedBy      *uuid.UUID  `json:"last_modified_by,omitempty"`
+	CreatedAt           time.Time   `json:"created_at"`
+	UpdatedAt           *time.Time  `json:"updated_at"`
+	ActiveCollaborators int         `json:"active_collaborators,omitempty"` // Count of active sessions
+}
+
+// NoteSessionResponse for real-time presence
+type NoteSessionResponse struct {
+	SessionUID     uuid.UUID `json:"session_uid"`
+	UserUID        uuid.UUID `json:"user_uid"`
+	UserName       string    `json:"user_name"`
+	UserEmail      *string   `json:"user_email"`
+	ConnectedAt    time.Time `json:"connected_at"`
+	LastSeenAt     time.Time `json:"last_seen_at"`
+	CursorPosition string    `json:"cursor_position"`
+}
+
+// NoteSnapshotResponse for version history
+type NoteSnapshotResponse struct {
+	SnapshotUID  uuid.UUID   `json:"snapshot_uid"`
+	NoteUID      uuid.UUID   `json:"note_uid"`
+	ContentJSON  NoteContent `json:"content"`
+	ContentHTML  *string     `json:"content_html,omitempty"`
+	Version      int         `json:"version"`
+	CreatedAt    time.Time   `json:"created_at"`
+	CreatedBy    *uuid.UUID  `json:"created_by"`
+	SnapshotType string      `json:"snapshot_type"`
+	Description  *string     `json:"description,omitempty"`
 }
 
 // Bulk notes response for getting all notes in a project

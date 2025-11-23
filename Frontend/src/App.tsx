@@ -9,7 +9,7 @@ import Projects from "./pages/Projects";
 import ProjectDashboard from "./pages/ProjectDashboard";
 import ProjectBrainstorm from "./pages/ProjectBrainstorm";
 import ProjectCanvas from "./pages/ProjectCanvas";
-import ProjectNotes from "./pages/ProjectNotes";
+import ProjectNotes from "./pages/ProjectNotesNew";
 import ProjectDevAI from "./pages/ProjectDevAI";
 import DBViewer from "./pages/DBViewer";
 import { FlowchartViewer } from "./pages/FlowchartViewer";

@@ -1,53 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  ArrowLeft, FileText, Plus, Edit2, Trash2, Folder, 
-  FolderPlus, ChevronRight, ChevronDown, MoreHorizontal, 
-  Save, Clock, GitCompare
-} from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
+import { ProjectNotesCollaborative } from '@/components/ProjectNotesCollaborative';
 import { apiService } from '@/services/api';
 import { toast } from '@/hooks/use-toast';
-import { Note, NoteContent, NoteBlock, NoteChecklistItem, NoteRequest } from '@/types';
-import { useAutoSave } from '@/hooks/use-auto-save';
-import DiffChecker from '@/components/DiffChecker';
-
-interface NoteFolder {
-  folder_uid: string;
-  project_id: number;
-  parent_folder_id?: number;
-  name: string;
-  position?: number;
-  created_at: string;
-  updated_at?: string;
-}
-
-interface NoteFolderRequest {
-  name: string;
-  parent_folder_id?: number;
-  position?: number;
-}
+import { Note, NoteRequest, NoteUpdateRequest } from '@/types';
 
 const ProjectNotesNotion: React.FC = () => {
   const { projectUid } = useParams<{ projectUid: string }>();
   const queryClient = useQueryClient();
-  
-  const [selectedNote, setSelectedNote] = useState<Note | null>(null);
-  const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
-  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
-  const [showCreateNoteDialog, setShowCreateNoteDialog] = useState(false);
-  const [showCreateFolderDialog, setShowCreateFolderDialog] = useState(false);
-  const [newNoteName, setNewNoteName] = useState('');
-  const [newFolderName, setNewFolderName] = useState('');
-  const [editingContent, setEditingContent] = useState('');
-  const [editingTitle, setEditingTitle] = useState('');
-  const [createNoteInFolder, setCreateNoteInFolder] = useState<string | null>(null);
   const [draggedNote, setDraggedNote] = useState<Note | null>(null);
   const [editingFolder, setEditingFolder] = useState<NoteFolder | null>(null);
   const [showEditFolderDialog, setShowEditFolderDialog] = useState(false);

@@ -233,8 +233,12 @@ export interface Note {
   project_id: number;
   title: string;
   content: NoteContent;
+  content_html?: string;
   folder_id?: number;
   position?: number;
+  version: number;
+  last_modified_by?: string;
+  active_collaborators?: number;
   created_at: string;
   updated_at?: string;
 }
@@ -300,6 +304,7 @@ export interface NoteContent {
 export interface NoteRequest {
   title: string;
   content: NoteContent;
+  content_html?: string;
   folder_id?: number;
   position?: number;
 }
@@ -307,8 +312,39 @@ export interface NoteRequest {
 export interface NoteUpdateRequest {
   title?: string;
   content?: NoteContent;
+  content_html?: string;
   folder_id?: number;
   position?: number;
+  version?: number;
+  last_modified_by?: string;
+}
+
+// Collaborative editing types
+export interface CollaboratorPresence {
+  user_uid: string;
+  user_name: string;
+  user_email?: string;
+  color: string;
+  cursor_position?: any;
+  last_seen_at: string;
+}
+
+export interface NoteSessionResponse {
+  session_uid: string;
+  note_uid: string;
+  collaborators: CollaboratorPresence[];
+}
+
+export interface NoteSnapshot {
+  snapshot_uid: string;
+  note_uid: string;
+  content: NoteContent;
+  content_html?: string;
+  version: number;
+  created_at: string;
+  created_by?: string;
+  snapshot_type: 'auto' | 'manual' | 'restore_point';
+  description?: string;
 }
 
 // DEV AI Chat Types

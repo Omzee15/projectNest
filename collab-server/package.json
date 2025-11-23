@@ -1,0 +1,26 @@
+{
+  "name": "projectnest-collab-server",
+  "version": "1.0.0",
+  "description": "WebSocket server for real-time collaborative editing in ProjectNest",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": ["websocket", "yjs", "collaborative-editing", "crdt"],
+  "author": "ProjectNest Team",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "ws": "^8.18.0",
+    "y-websocket": "^2.0.4",
+    "yjs": "^13.6.19",
+    "lib0": "^0.2.98",
+    "express": "^4.19.2",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "@types/ws": "^8.5.12"
+  }
+}

@@ -1,0 +1,99 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: projectnest-db
+    environment:
+      POSTGRES_DB: projectnest
+      POSTGRES_USER: projectnest
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./Backend/create_tables.sql:/docker-entrypoint-initdb.d/01-create_tables.sql
+      - ./Backend/migrations:/docker-entrypoint-initdb.d/migrations
+    networks:
+      - projectnest-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U projectnest"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Go Backend API
+  backend:
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile
+    container_name: projectnest-backend
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: projectnest
+      DB_USER: projectnest
+      DB_PASSWORD: ${DB_PASSWORD:-changeme}
+      JWT_SECRET: ${JWT_SECRET:-your-secret-key}
+      PORT: 8080
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - projectnest-network
+    restart: unless-stopped
+
+  # Collaboration WebSocket Server
+  collab-server:
+    build:
+      context: ./collab-server
+      dockerfile: Dockerfile
+    container_name: projectnest-collab
+    environment:
+      COLLAB_PORT: 1234
+      COLLAB_HOST: 0.0.0.0
+      PERSISTENCE_DIR: /app/yjs-storage
+      NODE_ENV: production
+    ports:
+      - "1234:1234"
+    volumes:
+      - collab_data:/app/yjs-storage
+    networks:
+      - projectnest-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:1234/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Frontend (Optional - for development)
+  frontend:
+    build:
+      context: ./Frontend
+      dockerfile: Dockerfile
+    container_name: projectnest-frontend
+    environment:
+      VITE_API_BASE_URL: http://localhost:8080/api
+      VITE_COLLAB_SERVER_URL: ws://localhost:1234
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+      - collab-server
+    networks:
+      - projectnest-network
+    restart: unless-stopped
+
+networks:
+  projectnest-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
+  collab_data:
+    driver: local

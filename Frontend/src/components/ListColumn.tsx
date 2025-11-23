@@ -160,7 +160,7 @@ export function ListColumn({
                 </button>
               )}
               <ColorIndicator color={list.color || '#FFFFFF'} size="sm" />
-              <h3 className="font-semibold text-sm text-foreground">
+              <h3 className="font-semibold text-sm text-foreground break-words min-w-0 flex-1">
                 {list.name}
               </h3>
             </div>
