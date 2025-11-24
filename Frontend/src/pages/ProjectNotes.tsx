@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,13 +10,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   ArrowLeft, FileText, Plus, Edit2, Trash2, Folder, 
   FolderPlus, ChevronRight, ChevronDown, MoreHorizontal, 
-  Save, Clock, GitCompare
+  Save, Clock, GitCompare, FileJson
 } from 'lucide-react';
 import { apiService } from '@/services/api';
 import { toast } from '@/hooks/use-toast';
 import { Note, NoteContent, NoteBlock, NoteChecklistItem, NoteRequest } from '@/types';
-import { useAutoSave } from '@/hooks/use-auto-save';
 import DiffChecker from '@/components/DiffChecker';
+import RichTextEditor from '@/components/RichTextEditor';
+import JsonEditor from '@/components/JsonEditor';
 
 interface NoteFolder {
   folder_uid: string;
@@ -220,6 +221,25 @@ const ProjectNotesNotion: React.FC = () => {
     },
   });
 
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const previousNoteRef = useRef<Note | null>(null);
+
+  // Save current note before switching to a new note
+  useEffect(() => {
+    const saveBeforeSwitch = async () => {
+      if (previousNoteRef.current && selectedNote?.note_uid !== previousNoteRef.current.note_uid) {
+        // Save the previous note if there were changes
+        if (hasUnsavedChanges) {
+          await saveCurrentNote(previousNoteRef.current.note_uid);
+        }
+      }
+      previousNoteRef.current = selectedNote;
+    };
+
+    saveBeforeSwitch();
+  }, [selectedNote]);
+
   // Load selected note content
   useEffect(() => {
     if (selectedNote) {
@@ -230,65 +250,45 @@ const ProjectNotesNotion: React.FC = () => {
         .map(block => block.content)
         .join('\\n\\n');
       setEditingContent(textContent);
-      
-      // Mark auto-save as clean for the newly loaded note
-      setTimeout(() => {
-        autoSaveContent.markAsSaved();
-        autoSaveTitle.markAsSaved();
-      }, 100);
+      setHasUnsavedChanges(false);
     }
   }, [selectedNote]);
 
-  // Auto-save functionality for note content
-  const autoSaveContent = useAutoSave(
-    editingContent,
-    async (content: string) => {
-      if (!selectedNote || !editingTitle.trim()) return;
-
-      const noteContent: NoteContent = {
-        blocks: [{
-          id: Date.now().toString(),
-          type: 'text',
-          content: content
-        }]
-      };
-
-      await apiService.updateNote(selectedNote.note_uid, {
-        title: editingTitle,
-        content: noteContent,
-      });
-    },
-    {
-      delay: 2000, // 2 seconds after user stops typing
-      enabled: !!selectedNote && !!editingTitle.trim(),
-      onSaveStart: () => {
-        // Optional: Show saving indicator
-      },
-      onSaveSuccess: () => {
-        toast({
-          title: 'Note saved',
-          description: 'Your changes have been automatically saved.',
-          duration: 2000,
-        });
-        // Invalidate queries to refresh the note list
-        queryClient.invalidateQueries({ queryKey: ['notes', projectUid] });
-      },
-      onSaveError: (error) => {
-        toast({
-          title: 'Error',
-          description: 'Failed to auto-save note. Please try saving manually.',
-          variant: 'destructive',
-        });
-      },
+  // Track changes
+  useEffect(() => {
+    if (selectedNote) {
+      const currentContent = selectedNote.content.blocks
+        .filter(block => block.type === 'text' && block.content)
+        .map(block => block.content)
+        .join('\\n\\n');
+      
+      const hasContentChanged = editingContent !== currentContent;
+      const hasTitleChanged = editingTitle !== selectedNote.title;
+      
+      setHasUnsavedChanges(hasContentChanged || hasTitleChanged);
     }
-  );
+  }, [editingContent, editingTitle, selectedNote]);
 
-  // Auto-save functionality for note title
-  const autoSaveTitle = useAutoSave(
-    editingTitle,
-    async (title: string) => {
-      if (!selectedNote || !title.trim()) return;
+  // Save when navigating away from the page
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges && selectedNote) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
 
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges, selectedNote]);
+
+  // Function to save the current note
+  const saveCurrentNote = async (noteUid?: string) => {
+    const noteToSave = noteUid || selectedNote?.note_uid;
+    if (!noteToSave || !editingTitle.trim()) return;
+
+    setIsSaving(true);
+    try {
       const noteContent: NoteContent = {
         blocks: [{
           id: Date.now().toString(),
@@ -297,27 +297,21 @@ const ProjectNotesNotion: React.FC = () => {
         }]
       };
 
-      await apiService.updateNote(selectedNote.note_uid, {
-        title: title,
+      await apiService.updateNote(noteToSave, {
+        title: editingTitle,
         content: noteContent,
       });
-    },
-    {
-      delay: 1500, // 1.5 seconds for title changes
-      enabled: !!selectedNote,
-      onSaveSuccess: () => {
-        // Refresh the note list to show updated title
-        queryClient.invalidateQueries({ queryKey: ['notes', projectUid] });
-      },
-      onSaveError: (error) => {
-        toast({
-          title: 'Error',
-          description: 'Failed to auto-save note title.',
-          variant: 'destructive',
-        });
-      },
+
+      setHasUnsavedChanges(false);
+      queryClient.invalidateQueries({ queryKey: ['notes', projectUid] });
+      
+      return true;
+    } catch (error) {
+      throw error;
+    } finally {
+      setIsSaving(false);
     }
-  );
+  };
 
   const handleCreateNote = () => {
     if (!newNoteName.trim()) return;
@@ -357,9 +351,7 @@ const ProjectNotesNotion: React.FC = () => {
     if (!selectedNote || !editingTitle.trim()) return;
 
     try {
-      // Use the auto-save's manual save function
-      await autoSaveContent.save();
-      await autoSaveTitle.save();
+      await saveCurrentNote();
       
       toast({
         title: 'Note saved',
@@ -496,10 +488,14 @@ const ProjectNotesNotion: React.FC = () => {
               <GitCompare className="w-4 h-4" />
               Diff Checker
             </TabsTrigger>
+            <TabsTrigger value="json" className="flex items-center gap-2 h-9">
+              <FileJson className="w-4 h-4" />
+              JSON Editor
+            </TabsTrigger>
           </TabsList>
         </div>
 
-        <TabsContent value="notes" className="flex flex-1 overflow-hidden !mt-0 m-0 p-0">
+        <TabsContent value="notes" className="flex flex-1 overflow-hidden !mt-0 m-0 p-0 data-[state=inactive]:hidden">
           <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
         <div className="w-80 bg-white border-r flex flex-col">
@@ -786,27 +782,22 @@ const ProjectNotesNotion: React.FC = () => {
                   />
                 </div>
                 <div className="flex items-center gap-3">
-                  {/* Auto-save status indicator */}
+                  {/* Save status indicator */}
                   <div className="flex items-center gap-2 text-sm text-gray-500">
-                    {(autoSaveContent.isSaving || autoSaveTitle.isSaving) ? (
+                    {isSaving ? (
                       <>
                         <Clock className="w-3 h-3 animate-pulse" />
                         <span>Saving...</span>
                       </>
-                    ) : (autoSaveContent.hasUnsavedChanges || autoSaveTitle.hasUnsavedChanges) ? (
+                    ) : hasUnsavedChanges ? (
                       <>
                         <div className="w-2 h-2 bg-orange-500 rounded-full" />
                         <span>Unsaved changes</span>
                       </>
-                    ) : autoSaveContent.lastSaved ? (
+                    ) : selectedNote ? (
                       <>
                         <div className="w-2 h-2 bg-green-500 rounded-full" />
-                        <span>
-                          Saved {autoSaveContent.lastSaved.toLocaleTimeString([], { 
-                            hour: '2-digit', 
-                            minute: '2-digit' 
-                          })}
-                        </span>
+                        <span>All changes saved</span>
                       </>
                     ) : null}
                   </div>
@@ -816,10 +807,10 @@ const ProjectNotesNotion: React.FC = () => {
                       variant="outline" 
                       size="sm" 
                       onClick={handleSaveNote}
-                      disabled={autoSaveContent.isSaving || autoSaveTitle.isSaving}
+                      disabled={isSaving || !hasUnsavedChanges}
                     >
                       <Save className="w-3 h-3 mr-1" />
-                      Save Now
+                      Save
                     </Button>
                     <Button variant="ghost" size="sm" onClick={handleDeleteNote}>
                       <Trash2 className="w-4 h-4" />
@@ -829,28 +820,21 @@ const ProjectNotesNotion: React.FC = () => {
               </div>
 
               {/* Note Content */}
-              <div className="flex-1 p-6 relative">
-                <Textarea
-                  value={editingContent}
-                  onChange={(e) => setEditingContent(e.target.value)}
-                  onKeyDown={(e) => {
-                    // Handle Ctrl+S / Cmd+S for manual save
-                    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-                      e.preventDefault();
-                      handleSaveNote();
-                    }
-                  }}
-                  placeholder="Start writing... (Auto-saves as you type, Ctrl+S to save now)"
-                  className={`w-full h-full resize-none border-none focus:ring-0 text-base leading-relaxed transition-all ${
-                    autoSaveContent.isSaving ? 'opacity-75' : ''
+              <div className="flex-1 p-6 relative overflow-hidden">
+                <RichTextEditor
+                  content={editingContent}
+                  onChange={(content) => setEditingContent(content)}
+                  placeholder="Start writing... (Changes will be saved when you click Save or switch notes)"
+                  className={`w-full h-full transition-all ${
+                    isSaving ? 'opacity-75' : ''
                   }`}
                 />
                 
-                {/* Floating auto-save indicator */}
-                {autoSaveContent.isSaving && (
+                {/* Floating save indicator */}
+                {isSaving && (
                   <div className="absolute top-4 right-4 bg-blue-50 text-blue-600 px-2 py-1 rounded-md text-xs flex items-center gap-1 shadow-sm">
                     <Clock className="w-3 h-3 animate-pulse" />
-                    Auto-saving...
+                    Saving...
                   </div>
                 )}
               </div>
@@ -873,8 +857,12 @@ const ProjectNotesNotion: React.FC = () => {
       </div>
         </TabsContent>
 
-        <TabsContent value="diff" className="flex-1 overflow-hidden m-0 p-0 border-t">
+        <TabsContent value="diff" className="flex-1 overflow-hidden m-0 p-0 border-t data-[state=inactive]:hidden">
           <DiffChecker />
+        </TabsContent>
+
+        <TabsContent value="json" className="flex-1 overflow-hidden m-0 p-0 border-t data-[state=inactive]:hidden">
+          <JsonEditor />
         </TabsContent>
       </Tabs>
     </div>
