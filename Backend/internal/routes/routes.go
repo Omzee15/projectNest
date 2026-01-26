@@ -31,14 +31,16 @@ func SetupRoutes(r *gin.Engine, projectHandler *handlers.ProjectHandler, listHan
 		})
 	})
 
-	// Health check
-	r.GET("/health", func(c *gin.Context) {
+	// Health check (support both GET and HEAD for monitoring tools)
+	healthHandler := func(c *gin.Context) {
 		logger.WithComponent("health").Info("Health check accessed")
 		c.JSON(http.StatusOK, gin.H{
 			"status":    "healthy",
 			"timestamp": time.Now().UTC(),
 		})
-	})
+	}
+	r.GET("/health", healthHandler)
+	r.HEAD("/health", healthHandler)
 
 	// API routes
 	api := r.Group("/api")
