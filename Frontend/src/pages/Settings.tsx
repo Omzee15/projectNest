@@ -69,8 +69,26 @@ const Settings: React.FC = () => {
 
   const handleThemeChange = async (themeKey: string) => {
     try {
+      // Apply theme immediately
       await applyTheme(themeKey);
+      
+      // Update local state
       handleSettingsChange('theme', themeKey);
+      
+      // Save to backend immediately
+      if (localSettings) {
+        const updatedSettings = { ...localSettings, theme: themeKey };
+        const success = await updateSettings(updatedSettings);
+        
+        if (success) {
+          toast({
+            title: 'Theme Changed',
+            description: `Successfully switched to ${themeKey.replace(/-/g, ' ')}`,
+          });
+        } else {
+          throw new Error('Failed to save theme preference');
+        }
+      }
     } catch (error) {
       console.error('Failed to apply theme:', error);
       toast({
