@@ -260,7 +260,8 @@ func (r *projectRepository) Create(ctx context.Context, project *models.Project)
 
 	err := r.db.QueryRow(ctx, query,
 		project.ProjectUID, project.UserID, project.Name, project.Description, project.Status,
-		project.Color, project.Position, project.StartDate, project.EndDate, project.IsPrivate, project.DbmlContent, project.DbmlLayoutData, project.FlowchartContent, project.CreatedBy,
+		project.Color, project.Position, project.StartDate, project.EndDate, project.IsPrivate,
+		project.DbmlContent, project.DbmlLayoutData, project.FlowchartContent, project.CreatedBy,
 	).Scan(&project.ID, &project.CreatedAt)
 
 	if err != nil {
