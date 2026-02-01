@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"lucid-lists-backend/internal/config"
@@ -34,6 +35,9 @@ func Connect(cfg *config.Config) (*pgxpool.Pool, error) {
 	// Set pool settings
 	config.MaxConns = 10
 	config.MinConns = 2
+	// Disable prepared statement cache to avoid "prepared statement does not exist" errors
+	// This can happen when connections are recycled in the pool
+	config.ConnConfig.DefaultQueryExecMode = pgx.QueryExecModeSimpleProtocol
 
 	// Create connection pool
 	pool, err := pgxpool.NewWithConfig(context.Background(), config)
