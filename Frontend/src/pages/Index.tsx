@@ -4,19 +4,9 @@ import { Navbar } from '@/components/Navbar';
 import { CreateProjectDialog } from '@/components/CreateProjectDialog';
 import { ArrowRight, Users, Calendar, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
 
 const Index = () => {
   const navigate = useNavigate();
-
-  useEffect(() => {
-    // Check if user is already authenticated
-    const token = localStorage.getItem('token');
-    if (token) {
-      // Redirect to projects if already logged in
-      navigate('/projects');
-    }
-  }, [navigate]);
 
   const features = [
     {
@@ -89,7 +79,7 @@ const Index = () => {
             Create your first project and start collaborating today.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" onClick={() => navigate('/login')}>
+            <Button size="lg" onClick={() => navigate('/projects')}>
               View All Projects
             </Button>
             <CreateProjectDialog 
