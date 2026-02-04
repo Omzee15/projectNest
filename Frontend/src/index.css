@@ -40,8 +40,8 @@ body {
 
 /* Mobile Touch Improvements */
 @media (max-width: 768px) {
-  /* Larger touch targets for mobile */
-  button, a, input, select, textarea {
+  /* Larger touch targets for mobile - excluding checkboxes and radio buttons */
+  button, a, input:not([type="checkbox"]):not([type="radio"]), select, textarea {
     min-height: 44px;
     min-width: 44px;
   }
@@ -60,6 +60,13 @@ body {
   body {
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
+  }
+  
+  /* Dialog/Modal padding on mobile - prevent border touching */
+  [role="dialog"], [role="alertdialog"] {
+    margin: 1rem !important;
+    max-width: calc(100% - 2rem) !important;
+    max-height: calc(100vh - 2rem) !important;
   }
 }
 
