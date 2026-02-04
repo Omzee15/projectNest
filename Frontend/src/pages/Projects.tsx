@@ -132,19 +132,19 @@ export default function Projects() {
     <div className="min-h-screen bg-background">
       <Navbar />
       
-      <main className="w-[90vw] mx-auto py-8">
+      <main className="w-full max-w-[90vw] mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Projects</h1>
-            <p className="text-muted-foreground mt-2">
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Projects</h1>
+            <p className="text-sm sm:text-base text-muted-foreground mt-2">
               Manage and organize all your projects in one place
             </p>
           </div>
           <CreateProjectDialog 
             onProjectCreate={handleProjectCreated}
             trigger={
-              <Button size="lg">
+              <Button size="lg" className="w-full sm:w-auto">
                 <Plus className="mr-2 h-4 w-4" />
                 New Project
               </Button>
@@ -154,22 +154,22 @@ export default function Projects() {
 
         {/* Projects Grid */}
         {projects.length === 0 ? (
-          <div className="text-center py-16">
+          <div className="text-center py-12 sm:py-16 px-4">
             <div className="max-w-md mx-auto">
               <div className="mb-6">
                 <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center mx-auto mb-4">
                   <Users className="h-8 w-8 text-muted-foreground" />
                 </div>
-                <h3 className="text-xl font-semibold text-foreground mb-2">
+                <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-2">
                   No projects yet
                 </h3>
-                <p className="text-muted-foreground mb-6">
+                <p className="text-sm sm:text-base text-muted-foreground mb-6">
                   Get started by creating your first project. Organize tasks, collaborate with your team, and track progress.
                 </p>
                 <CreateProjectDialog 
                   onProjectCreate={handleProjectCreated}
                   trigger={
-                    <Button size="lg">
+                    <Button size="lg" className="w-full sm:w-auto">
                       <Plus className="mr-2 h-4 w-4" />
                       Create Your First Project
                     </Button>
@@ -179,7 +179,7 @@ export default function Projects() {
             </div>
           </div>
         ) : (
-          <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+          <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
             {projects.map((project) => (
                 <Card 
                   key={project.project_uid} 
@@ -191,11 +191,11 @@ export default function Projects() {
                 >
                   <CardHeader>
                     <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <CardTitle className="text-xl group-hover:text-primary transition-colors">
+                      <div className="flex-1 min-w-0">
+                        <CardTitle className="text-lg sm:text-xl group-hover:text-primary transition-colors truncate">
                           {project.name}
                         </CardTitle>
-                        <div className="flex items-center gap-2 mt-2">
+                        <div className="flex items-center gap-2 mt-2 flex-wrap">
                           <span 
                             className={`px-2 py-1 text-xs rounded-md border ${getStatusColor(project.status)}`}
                           >
@@ -321,22 +321,22 @@ export default function Projects() {
       </AlertDialog>
 
       {/* AI Chat Floating Buttons */}
-      <div className="fixed bottom-6 right-6 z-40 flex gap-4">
+      <div className="fixed bottom-4 sm:bottom-6 right-4 sm:right-6 z-40 flex gap-2 sm:gap-4">
         <Button
           size="lg"
           onClick={() => setIsDevAISelectOpen(true)}
-          className="rounded-full h-14 w-14 shadow-lg hover:shadow-xl transition-shadow bg-muted"
+          className="rounded-full h-12 w-12 sm:h-14 sm:w-14 shadow-lg hover:shadow-xl transition-shadow bg-muted p-0"
           title="Open Project Dev AI"
         >
-          <Bot className="h-6 w-6 text-blue-500" />
+          <Bot className="h-5 w-5 sm:h-6 sm:w-6 text-blue-500" />
         </Button>
         <Button
           size="lg"
           onClick={() => setIsAIChatOpen(true)}
-          className="rounded-full h-14 w-14 shadow-lg hover:shadow-xl transition-shadow"
+          className="rounded-full h-12 w-12 sm:h-14 sm:w-14 shadow-lg hover:shadow-xl transition-shadow p-0"
           title="Open AI Assistant"
         >
-          <Bot className="h-6 w-6" />
+          <Bot className="h-5 w-5 sm:h-6 sm:w-6" />
         </Button>
       </div>
       {/* AI Chat Component */}

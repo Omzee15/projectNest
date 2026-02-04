@@ -112,10 +112,10 @@ const Login: React.FC = () => {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">
+          <CardTitle className="text-xl sm:text-2xl font-bold text-center">
             {isRegistrating ? 'Create an account' : 'Sign in'}
           </CardTitle>
-          <CardDescription className="text-center">
+          <CardDescription className="text-center text-sm sm:text-base">
             {isRegistrating 
               ? 'Enter your details to create your account'
               : 'Enter your credentials to access your projects'

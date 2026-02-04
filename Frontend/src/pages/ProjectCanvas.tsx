@@ -71,28 +71,29 @@ const ProjectCanvas: React.FC = () => {
     : undefined;
 
   return (
-    <div className="flex h-screen bg-background">
-      {/* Toolbar - Left Column */}
-      <div className="w-80 border-r bg-card flex flex-col">
-        <div className="p-4 border-b">
-          <div className="flex items-center gap-4 mb-4">
+    <div className="flex flex-col sm:flex-row h-screen bg-background">
+      {/* Toolbar - Top on mobile, Left on desktop */}
+      <div className="w-full sm:w-80 border-b sm:border-r sm:border-b-0 bg-card flex flex-col max-h-48 sm:max-h-full overflow-y-auto">
+        <div className="p-3 sm:p-4 border-b">
+          <div className="flex items-center gap-2 sm:gap-4 mb-2 sm:mb-4">
             <Button 
               variant="outline" 
               size="sm"
               onClick={() => window.history.back()}
+              className="flex-shrink-0"
             >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back
+              <ArrowLeft className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Back</span>
             </Button>
           </div>
           
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500">
-              <Palette className="w-5 h-5 text-white" />
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 flex-shrink-0">
+              <Palette className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
             </div>
-            <div>
-              <h1 className="text-xl font-bold">Project Canvas</h1>
-              <p className="text-sm text-muted-foreground">
+            <div className="min-w-0">
+              <h1 className="text-base sm:text-xl font-bold truncate">Project Canvas</h1>
+              <p className="text-xs sm:text-sm text-muted-foreground truncate">
                 {project?.data?.name || 'Project'}
               </p>
             </div>

@@ -147,7 +147,7 @@ export function ListColumn({
       {...(isDraggable ? attributes : {})}
       className={isDragOverlay ? "pointer-events-none" : ""}
     >
-      <Card className="w-72 flex-shrink-0 bg-muted/30 border-border-light">
+      <Card className="w-64 sm:w-72 flex-shrink-0 bg-muted/30 border-border-light">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">

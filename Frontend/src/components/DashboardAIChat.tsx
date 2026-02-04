@@ -616,14 +616,14 @@ Please try again in a moment, or let me know if you'd like to modify the project
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <Card className="ai-chat-dialog bg-card border w-full max-w-6xl h-[80vh] flex flex-col shadow-2xl">
-        <CardHeader className="flex-shrink-0 bg-card border-b">
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-2 sm:p-4">
+      <Card className="ai-chat-dialog bg-card border w-full max-w-6xl h-[95vh] sm:h-[80vh] flex flex-col shadow-2xl">
+        <CardHeader className="flex-shrink-0 bg-card border-b p-3 sm:p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Bot className="h-6 w-6 text-primary" />
-              <CardTitle>ProjectNest AI Assistant</CardTitle>
-              <Badge variant="secondary" className="ml-2">
+              <Bot className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+              <CardTitle className="text-base sm:text-lg">ProjectNest AI</CardTitle>
+              <Badge variant="secondary" className="ml-2 hidden sm:flex">
                 <Zap className="h-3 w-3 mr-1" />
                 Powered by Gemini
               </Badge>
@@ -634,18 +634,18 @@ Please try again in a moment, or let me know if you'd like to modify the project
           </div>
         </CardHeader>
 
-        <CardContent className="flex-1 flex gap-4 p-4 min-h-0 bg-card">
+        <CardContent className="flex-1 flex flex-col sm:flex-row gap-2 sm:gap-4 p-2 sm:p-4 min-h-0 bg-card overflow-hidden">
           {/* Conversations Sidebar */}
-          <div className="w-80 flex flex-col gap-4 bg-card">
+          <div className="w-full sm:w-80 flex flex-col gap-2 sm:gap-4 bg-card max-h-32 sm:max-h-full overflow-y-auto sm:overflow-visible">
             <div className="flex items-center justify-between">
-              <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+              <h3 className="font-semibold text-xs sm:text-sm text-muted-foreground uppercase tracking-wide">
                 Conversations
               </h3>
               <Dialog open={showCreateChatDialog} onOpenChange={setShowCreateChatDialog}>
                 <DialogTrigger asChild>
-                  <Button size="sm" variant="outline">
-                    <Plus className="h-4 w-4 mr-1" />
-                    New
+                  <Button size="sm" variant="outline" className="text-xs">
+                    <Plus className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
+                    <span className="hidden sm:inline">New</span>
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
@@ -744,7 +744,8 @@ Please try again in a moment, or let me know if you'd like to modify the project
             </ScrollArea>
           </div>
 
-          <Separator orientation="vertical" />
+          <Separator orientation="vertical" className="hidden sm:block" />
+          <Separator orientation="horizontal" className="sm:hidden" />
 
           {/* Chat Area */}
           <div className="flex-1 flex flex-col min-w-0 bg-card">
@@ -762,23 +763,23 @@ Please try again in a moment, or let me know if you'd like to modify the project
 
                 {/* Messages */}
                 <ScrollArea className="flex-1 mb-4">
-                  <div className="space-y-4 p-1">
+                  <div className="space-y-3 sm:space-y-4 p-1">
                     {messages.map((message) => (
                       <div
                         key={message.id}
-                        className={`flex gap-3 ${
+                        className={`flex gap-2 sm:gap-3 ${
                           message.type === 'user' ? 'justify-end' : 'justify-start'
                         }`}
                       >
                         {message.type === 'ai' && (
                           <div className="flex-shrink-0">
-                            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                              <Bot className="h-4 w-4 text-primary" />
+                            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                              <Bot className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
                             </div>
                           </div>
                         )}
                         <div
-                          className={`max-w-[70%] rounded-lg px-4 py-2 ${
+                          className={`max-w-[85%] sm:max-w-[70%] rounded-lg px-3 py-2 sm:px-4 ${
                             message.type === 'user'
                               ? 'bg-primary text-primary-foreground'
                               : 'ai-message-bg'
@@ -804,8 +805,8 @@ Please try again in a moment, or let me know if you'd like to modify the project
                         </div>
                         {message.type === 'user' && (
                           <div className="flex-shrink-0">
-                            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-                              <User className="h-4 w-4 text-primary-foreground" />
+                            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-primary flex items-center justify-center">
+                              <User className="h-3 w-3 sm:h-4 sm:w-4 text-primary-foreground" />
                             </div>
                           </div>
                         )}

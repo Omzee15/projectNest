@@ -186,7 +186,7 @@ export function TaskCard({ task, onClick, onTaskDelete, onTaskUpdate, onTaskEdit
       `}
       onClick={onClick}
     >
-      <CardContent className="p-3 space-y-3">
+      <CardContent className="p-3 sm:p-4 space-y-2 sm:space-y-3">
         <div className="space-y-2">
           <div className="flex items-start justify-between">
             <div className="flex items-start gap-2 flex-1 min-w-0">

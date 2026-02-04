@@ -237,57 +237,42 @@ export function ProjectBoard({
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
       >
-        <div className="h-full p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex-1">
-              <div className="flex items-center gap-3">
-                <ColorIndicator color={project.color || '#FFFFFF'} size="md" />
-                <h1 className="text-2xl font-bold text-foreground">{project.name}</h1>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleCanvasClick}
-                  className="flex items-center gap-2"
-                >
-                  <Palette className="h-4 w-4" />
-                  Canvas
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleNotesClick}
-                  className="flex items-center gap-2"
-                >
-                  <FileText className="h-4 w-4" />
-                  Notes
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleDevAIClick}
-                  className="flex items-center gap-2"
-                >
-                  <Bot className="h-4 w-4" />
-                  DEV AI
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => navigate(`/db-viewer?projectId=${project.project_uid}`)}
-                  className="flex items-center gap-2"
-                >
-                  <Database className="h-4 w-4" />
-                  DB Viewer
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => navigate(`/flowchart?projectId=${project.project_uid}`)}
-                  className="flex items-center gap-2"
-                >
-                  <GitBranch className="h-4 w-4" />
-                  Flowchart
-                </Button>
+        <div className="h-full p-3 sm:p-6">
+          <div className="flex flex-col gap-3 sm:gap-4 mb-4 sm:mb-6">
+            {/* Title Row */}
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+                <ColorIndicator color={project.color || '#FFFFFF'} size="md" className="flex-shrink-0" />
+                <h1 className="text-xl sm:text-2xl font-bold text-foreground truncate">{project.name}</h1>
+              </div>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                {/* Desktop: Members Button */}
+                <ProjectMembersDialog 
+                  projectId={project.project_uid}
+                  trigger={
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="hidden sm:flex items-center gap-2"
+                    >
+                      <Users className="h-4 w-4" />
+                      <span className="hidden md:inline">Members</span>
+                    </Button>
+                  }
+                />
+                {/* Mobile: Members Icon */}
+                <ProjectMembersDialog 
+                  projectId={project.project_uid}
+                  trigger={
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="sm:hidden p-2"
+                    >
+                      <Users className="h-4 w-4" />
+                    </Button>
+                  }
+                />
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
@@ -298,7 +283,7 @@ export function ProjectBoard({
                       <MoreHorizontal className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start">
+                  <DropdownMenuContent align="end">
                     <DropdownMenuItem
                       className="cursor-pointer"
                       onClick={handleEditProject}
@@ -309,29 +294,65 @@ export function ProjectBoard({
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
-              {project.description && (
-                <p className="text-muted-foreground mt-1 ml-8">{project.description}</p>
-              )}
             </div>
-            <div className="flex items-center gap-2">
-              <ProjectMembersDialog 
-                projectId={project.project_uid}
-                trigger={
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex items-center gap-2"
-                  >
-                    <Users className="h-4 w-4" />
-                    Members
-                  </Button>
-                }
-              />
+            
+            {/* Action Buttons Row - Scrollable on Mobile */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0 -mx-3 px-3 sm:mx-0 sm:px-0">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleCanvasClick}
+                className="flex items-center gap-2 whitespace-nowrap flex-shrink-0"
+              >
+                <Palette className="h-4 w-4" />
+                <span className="hidden sm:inline">Canvas</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleNotesClick}
+                className="flex items-center gap-2 whitespace-nowrap flex-shrink-0"
+              >
+                <FileText className="h-4 w-4" />
+                <span className="hidden sm:inline">Notes</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleDevAIClick}
+                className="flex items-center gap-2 whitespace-nowrap flex-shrink-0"
+              >
+                <Bot className="h-4 w-4" />
+                <span className="hidden sm:inline">DEV AI</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate(`/db-viewer?projectId=${project.project_uid}`)}
+                className="hidden lg:flex items-center gap-2 whitespace-nowrap flex-shrink-0"
+              >
+                <Database className="h-4 w-4" />
+                DB Viewer
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate(`/flowchart?projectId=${project.project_uid}`)}
+                className="hidden lg:flex items-center gap-2 whitespace-nowrap flex-shrink-0"
+              >
+                <GitBranch className="h-4 w-4" />
+                Flowchart
+              </Button>
             </div>
+            
+            {/* Description */}
+            {project.description && (
+              <p className="text-sm sm:text-base text-muted-foreground">{project.description}</p>
+            )}
           </div>
 
           <SortableContext items={lists.map(list => list.list_uid)} strategy={horizontalListSortingStrategy}>
-            <div className="flex gap-6 overflow-x-auto pb-6 h-full">
+            <div className="flex gap-3 sm:gap-6 overflow-x-auto pb-6 h-full -mx-3 px-3 sm:mx-0 sm:px-0">
               {lists.map((list) => (
                 <ListColumn
                   key={list.list_uid}
