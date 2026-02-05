@@ -73,26 +73,30 @@ export function TaskDetailsDialog({ task, open, onOpenChange, onEditTask }: Task
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex items-center gap-3 flex-1">
-              <ColorIndicator color={task.color || '#FFFFFF'} size="md" />
-              <DialogTitle className="text-xl font-semibold leading-tight">
-                {task.title}
-              </DialogTitle>
+          <div className="flex flex-col gap-3">
+            <div className="flex items-start justify-between gap-4 pr-8">
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <ColorIndicator color={task.color || '#FFFFFF'} size="md" className="flex-shrink-0" />
+                <DialogTitle className="text-lg sm:text-xl font-semibold leading-tight">
+                  {task.title}
+                </DialogTitle>
+              </div>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onEditTask(task)}
-              className="flex items-center gap-2"
-            >
-              <Edit className="h-4 w-4" />
-              Edit
-            </Button>
+            <div className="flex items-center justify-between gap-4">
+              <DialogDescription className="text-sm sm:text-base">
+                Task Details and Information
+              </DialogDescription>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onEditTask(task)}
+                className="flex items-center gap-2 flex-shrink-0"
+              >
+                <Edit className="h-4 w-4" />
+                <span className="hidden sm:inline">Edit</span>
+              </Button>
+            </div>
           </div>
-          <DialogDescription className="text-base">
-            Task Details and Information
-          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">

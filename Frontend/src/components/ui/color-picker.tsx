@@ -65,9 +65,23 @@ export function ColorIndicator({ color, size = 'md', className }: ColorIndicator
     lg: 'w-6 h-6'
   };
 
+  // Check if color is white or very light to add visible border
+  const isLightColor = (hexColor: string) => {
+    const hex = hexColor.replace('#', '');
+    const r = parseInt(hex.substr(0, 2), 16);
+    const g = parseInt(hex.substr(2, 2), 16);
+    const b = parseInt(hex.substr(4, 2), 16);
+    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+    return brightness > 220;
+  };
+
+  const borderClass = isLightColor(color) 
+    ? 'border-2 border-gray-300' 
+    : 'border-2 border-gray-200/50';
+
   return (
     <div
-      className={`${sizeClasses[size]} rounded-full border-2 border-white shadow-sm ${className || ''}`}
+      className={`${sizeClasses[size]} rounded-full ${borderClass} shadow-sm ${className || ''}`}
       style={{ backgroundColor: color }}
       aria-label={`Color: ${color}`}
     />

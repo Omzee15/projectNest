@@ -46,6 +46,16 @@ body {
     min-width: 44px;
   }
   
+  /* Keep checkboxes small on mobile */
+  input[type="checkbox"], 
+  [role="checkbox"],
+  button[role="checkbox"] {
+    min-height: unset !important;
+    min-width: unset !important;
+    height: 1rem !important;
+    width: 1rem !important;
+  }
+  
   /* Smooth scrolling for mobile */
   * {
     -webkit-overflow-scrolling: touch;
