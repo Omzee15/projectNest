@@ -4,9 +4,18 @@ import { Navbar } from '@/components/Navbar';
 import { CreateProjectDialog } from '@/components/CreateProjectDialog';
 import { ArrowRight, Users, Calendar, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { isUserLoggedIn } from '@/utils/auth';
 
 const Index = () => {
   const navigate = useNavigate();
+
+  const handleGetStarted = () => {
+    if (isUserLoggedIn()) {
+      navigate('/projects');
+    } else {
+      navigate('/login');
+    }
+  };
 
   const features = [
     {
@@ -43,7 +52,7 @@ const Index = () => {
           </p>
           <Button 
             size="lg" 
-            onClick={() => navigate('/login')}
+            onClick={handleGetStarted}
             className="bg-blue-600 hover:bg-blue-700 text-white px-6 sm:px-8 w-full sm:w-auto"
           >
             Get Started <ArrowRight className="ml-2 h-4 w-4" />
