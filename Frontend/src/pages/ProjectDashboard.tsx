@@ -284,7 +284,7 @@ export default function ProjectDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="h-screen bg-background flex flex-col overflow-hidden">
       <Navbar />
       <ProjectBoard
         project={project}

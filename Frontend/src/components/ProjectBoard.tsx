@@ -229,7 +229,7 @@ export function ProjectBoard({
   };
 
   return (
-    <div className="flex-1 overflow-hidden">
+    <div className="flex-1 overflow-hidden flex flex-col">
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -237,7 +237,8 @@ export function ProjectBoard({
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
       >
-        <div className="h-full p-3 sm:p-6">
+        {/* Sticky Header */}
+        <div className="flex-shrink-0 p-3 sm:p-6 pb-0 bg-background border-b">
           <div className="flex flex-col gap-3 sm:gap-4 mb-4 sm:mb-6">
             {/* Title Row */}
             <div className="flex items-center justify-between gap-2">
@@ -350,9 +351,12 @@ export function ProjectBoard({
               <p className="text-sm sm:text-base text-muted-foreground">{project.description}</p>
             )}
           </div>
+        </div>
 
+        {/* Scrollable Lists Section */}
+        <div className="flex-1 overflow-auto p-3 sm:p-6 pt-4 sm:pt-6">
           <SortableContext items={lists.map(list => list.list_uid)} strategy={horizontalListSortingStrategy}>
-            <div className="flex gap-3 sm:gap-6 overflow-x-auto pb-6 h-full -mx-3 px-3 sm:mx-0 sm:px-0">
+            <div className="flex gap-3 sm:gap-6 pb-6 min-h-full -mx-3 px-3 sm:mx-0 sm:px-0">
               {lists.map((list) => (
                 <ListColumn
                   key={list.list_uid}
