@@ -9,9 +9,10 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Flag, User, Clock, Edit } from 'lucide-react';
+import { Calendar, Flag, User, Clock, Edit, Users } from 'lucide-react';
 import { Task } from '@/types';
 import { ColorIndicator } from '@/components/ui/color-picker';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { formatDistanceToNow } from 'date-fns';
 
 interface TaskDetailsDialogProps {
@@ -71,11 +72,11 @@ export function TaskDetailsDialog({ task, open, onOpenChange, onEditTask }: Task
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto overflow-x-hidden">
         <DialogHeader>
-          <div className="flex flex-col gap-3">
-            <div className="flex items-start justify-between gap-4 pr-8">
-              <div className="flex items-center gap-3 flex-1 min-w-0">
+          <div className="flex flex-col gap-3 max-w-full">
+            <div className="flex items-start justify-between gap-4 pr-8 max-w-full">
+              <div className="flex items-center gap-3 flex-1 min-w-0 overflow-hidden">
                 <ColorIndicator color={task.color || '#FFFFFF'} size="md" className="flex-shrink-0" />
                 <DialogTitle className="text-lg sm:text-xl font-semibold leading-tight">
                   {task.title}
@@ -99,9 +100,9 @@ export function TaskDetailsDialog({ task, open, onOpenChange, onEditTask }: Task
           </div>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-6 max-w-full overflow-hidden">
           {/* Status and Priority Section */}
-          <div className="flex items-center gap-4 flex-wrap">
+          <div className="flex items-center gap-4 flex-wrap max-w-full">
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-muted-foreground">Status:</span>
               <Badge 
@@ -127,10 +128,33 @@ export function TaskDetailsDialog({ task, open, onOpenChange, onEditTask }: Task
           {task.description && (
             <div className="space-y-2">
               <h3 className="text-sm font-medium text-muted-foreground">Description</h3>
-              <div className="bg-muted/50 p-4 rounded-lg">
-                <p className="text-sm leading-relaxed whitespace-pre-wrap">
+              <div className="bg-muted/50 p-4 rounded-lg overflow-hidden">
+                <p className="text-sm leading-relaxed whitespace-pre-wrap break-words overflow-wrap-anywhere">
                   {task.description}
                 </p>
+              </div>
+            </div>
+          )}
+
+          {/* Assignees */}
+          {task.assignees && task.assignees.length > 0 && (
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium text-muted-foreground">Assigned To</h3>
+              <div className="flex flex-wrap gap-2">
+                {task.assignees.map((assignee) => (
+                  <Badge
+                    key={assignee.user_uid}
+                    variant="secondary"
+                    className="flex items-center gap-2 py-1.5 px-3"
+                  >
+                    <Avatar className="h-5 w-5 border border-background">
+                      <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
+                        {assignee.name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="text-xs font-medium">{assignee.name}</span>
+                  </Badge>
+                ))}
               </div>
             </div>
           )}
