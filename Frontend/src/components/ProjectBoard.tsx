@@ -328,17 +328,6 @@ export function ProjectBoard({
                 <Bot className="h-4 w-4" />
                 <span className="hidden sm:inline">DEV AI</span>
               </Button>
-              {onManageCategories && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={onManageCategories}
-                  className="flex items-center gap-2 whitespace-nowrap flex-shrink-0"
-                >
-                  <Tag className="h-4 w-4" />
-                  <span className="hidden sm:inline">Categories</span>
-                </Button>
-              )}
               <Button
                 variant="outline"
                 size="sm"
