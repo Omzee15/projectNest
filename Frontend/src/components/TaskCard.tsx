@@ -294,19 +294,38 @@ export function TaskCard({ task, onClick, onTaskDelete, onTaskUpdate, onTaskEdit
                 {task.priority}
               </Badge>
             )}
-            {task.status && (
-              <Badge 
-                variant="outline" 
-                className={`text-xs px-2 py-0.5 ${
-                  task.status === 'completed' 
-                    ? 'border-green-500 text-green-700 bg-green-50' 
-                    : task.status === 'in_progress' 
-                    ? 'border-yellow-500 text-yellow-700 bg-yellow-50'
-                    : 'border-gray-300 text-gray-600 bg-gray-50'
-                }`}
-              >
-                {task.status === 'in_progress' ? 'In Progress' : task.status}
-              </Badge>
+            {task.categories && task.categories.length > 0 && (
+              <div className="flex items-center gap-1">
+                {task.categories.length === 1 ? (
+                  <Badge
+                    variant="outline"
+                    className="text-xs px-2 py-0.5"
+                    style={{ 
+                      backgroundColor: task.categories[0].color + '20',
+                      borderColor: task.categories[0].color,
+                      color: task.categories[0].color
+                    }}
+                  >
+                    {task.categories[0].name}
+                  </Badge>
+                ) : (
+                  task.categories.slice(0, 3).map((category) => (
+                    <div
+                      key={category.category_uid}
+                      className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-semibold border-2 border-background"
+                      style={{ backgroundColor: category.color, color: 'white' }}
+                      title={category.name}
+                    >
+                      {category.name.substring(0, 2).toUpperCase()}
+                    </div>
+                  ))
+                )}
+                {task.categories.length > 3 && (
+                  <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-semibold bg-muted text-muted-foreground border-2 border-background">
+                    +{task.categories.length - 3}
+                  </div>
+                )}
+              </div>
             )}
             {task.assignees && task.assignees.length > 0 && (
               <div className="flex -space-x-2">
