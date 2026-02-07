@@ -10,6 +10,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Popover,
@@ -23,7 +24,11 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { formatDistanceToNow } from 'date-fns';
 import { apiService } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
-import { ManageCategoriesDialog } from './ManageCategoriesDialog';
+
+const CATEGORY_COLORS = [
+  '#EF4444', '#F97316', '#F59E0B', '#10B981',
+  '#3B82F6', '#8B5CF6', '#EC4899', '#6B7280'
+];
 
 interface TaskDetailsDialogProps {
   task?: Task;
@@ -41,7 +46,9 @@ export function TaskDetailsDialog({ task, open, onOpenChange, onEditTask, projec
   const [loadingComments, setLoadingComments] = useState(false);
   const [loadingCategories, setLoadingCategories] = useState(false);
   const [categoryPopoverOpen, setCategoryPopoverOpen] = useState(false);
-  const [showManageCategories, setShowManageCategories] = useState(false);
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [newCategoryColor, setNewCategoryColor] = useState('#3B82F6');
   const { toast } = useToast();
 
   useEffect(() => {
@@ -166,6 +173,41 @@ export function TaskDetailsDialog({ task, open, onOpenChange, onEditTask, projec
     }
   };
 
+  const handleCreateCategory = async () => {
+    if (!projectUid || !newCategoryName.trim()) {
+      toast({
+        title: 'Error',
+        description: 'Category name is required',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      await apiService.createTaskCategory({
+        project_uid: projectUid,
+        name: newCategoryName.trim(),
+        color: newCategoryColor,
+      });
+
+      setNewCategoryName('');
+      setNewCategoryColor('#3B82F6');
+      setShowCreateForm(false);
+      loadProjectCategories();
+      
+      toast({
+        title: 'Success',
+        description: 'Category created successfully',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to create category',
+        variant: 'destructive',
+      });
+    }
+  };
+
   if (!task) return null;
 
   const formatDate = (dateString: string) => {
@@ -214,7 +256,6 @@ export function TaskDetailsDialog({ task, open, onOpenChange, onEditTask, projec
   };
 
   return (
-    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto overflow-x-hidden">
         <DialogHeader>
@@ -319,49 +360,114 @@ export function TaskDetailsDialog({ task, open, onOpenChange, onEditTask, projec
                 </PopoverTrigger>
                 <PopoverContent className="w-80" align="end">
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-medium text-sm">Manage Categories</h4>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setShowManageCategories(true);
-                          setCategoryPopoverOpen(false);
-                        }}
-                        className="h-7"
-                      >
-                        <Plus className="h-3 w-3 mr-1" />
-                        Create New
-                      </Button>
-                    </div>
-                    
-                    {projectCategories.length === 0 ? (
-                      <p className="text-sm text-muted-foreground text-center py-4">
-                        No categories yet. Create one to get started!
-                      </p>
-                    ) : (
-                      <div className="space-y-2">
-                        <p className="text-xs text-muted-foreground">
-                          Click to add or remove:
-                        </p>
-                        <div className="flex flex-wrap gap-2 max-h-60 overflow-y-auto">
-                          {projectCategories.map((category) => {
-                            const isAssigned = categories.some(c => c.category_uid === category.category_uid);
-                            return (
-                              <Badge
-                                key={category.category_uid}
-                                variant={isAssigned ? "default" : "outline"}
-                                className="cursor-pointer transition-all hover:scale-105"
-                                style={isAssigned ? { backgroundColor: category.color, borderColor: category.color, color: 'white' } : { borderColor: category.color, color: category.color }}
-                                onClick={() => handleToggleCategory(category.category_uid)}
-                              >
-                                {category.name}
-                                {isAssigned && <X className="ml-1 h-3 w-3" />}
-                              </Badge>
-                            );
-                          })}
+                    {/* Create Form */}
+                    {showCreateForm ? (
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-medium text-sm">Create Category</h4>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setShowCreateForm(false);
+                              setNewCategoryName('');
+                            }}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="category-name">Name</Label>
+                          <Input
+                            id="category-name"
+                            value={newCategoryName}
+                            onChange={(e) => setNewCategoryName(e.target.value)}
+                            placeholder="e.g., Bug, Feature, Priority"
+                            autoFocus
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label>Color</Label>
+                          <div className="flex flex-wrap gap-2">
+                            {CATEGORY_COLORS.map((colorOption) => (
+                              <button
+                                key={colorOption}
+                                type="button"
+                                className={`w-8 h-8 rounded-full transition-all hover:scale-110 ${
+                                  newCategoryColor === colorOption ? 'ring-2 ring-offset-2 ring-primary' : ''
+                                }`}
+                                style={{ backgroundColor: colorOption }}
+                                onClick={() => setNewCategoryColor(colorOption)}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                        
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={handleCreateCategory}
+                            className="flex-1"
+                            disabled={!newCategoryName.trim()}
+                          >
+                            Create
+                          </Button>
+                          <Button
+                            variant="outline"
+                            onClick={() => {
+                              setShowCreateForm(false);
+                              setNewCategoryName('');
+                            }}
+                          >
+                            Cancel
+                          </Button>
                         </div>
                       </div>
+                    ) : (
+                      <>
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-medium text-sm">Manage Categories</h4>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setShowCreateForm(true)}
+                            className="h-7"
+                          >
+                            <Plus className="h-3 w-3 mr-1" />
+                            Create New
+                          </Button>
+                        </div>
+                        
+                        {projectCategories.length === 0 ? (
+                          <p className="text-sm text-muted-foreground text-center py-4">
+                            No categories yet. Create one to get started!
+                          </p>
+                        ) : (
+                          <div className="space-y-2">
+                            <p className="text-xs text-muted-foreground">
+                              Click to add or remove:
+                            </p>
+                            <div className="flex flex-wrap gap-2 max-h-60 overflow-y-auto">
+                              {projectCategories.map((category) => {
+                                const isAssigned = categories.some(c => c.category_uid === category.category_uid);
+                                return (
+                                  <Badge
+                                    key={category.category_uid}
+                                    variant={isAssigned ? "default" : "outline"}
+                                    className="cursor-pointer transition-all hover:scale-105"
+                                    style={isAssigned ? { backgroundColor: category.color, borderColor: category.color, color: 'white' } : { borderColor: category.color, color: category.color }}
+                                    onClick={() => handleToggleCategory(category.category_uid)}
+                                  >
+                                    {category.name}
+                                    {isAssigned && <X className="ml-1 h-3 w-3" />}
+                                  </Badge>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 </PopoverContent>
@@ -538,18 +644,5 @@ export function TaskDetailsDialog({ task, open, onOpenChange, onEditTask, projec
         </DialogFooter>
       </DialogContent>
     </Dialog>
-
-    {/* Manage Categories Dialog */}
-    {showManageCategories && (
-      <ManageCategoriesDialog
-        open={showManageCategories}
-        onOpenChange={setShowManageCategories}
-        projectUid={projectUid}
-        onCategoriesUpdated={() => {
-          fetchProjectCategories();
-        }}
-      />
-    )}
-    </>
   );
 }
