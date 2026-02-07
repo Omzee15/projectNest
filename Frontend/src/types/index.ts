@@ -66,6 +66,7 @@ export interface Task {
   updated_by?: string;
   is_active: boolean;
   assignees?: TaskAssigneeWithUser[];
+  categories?: TaskCategory[];
 }
 
 export interface TaskAssignee {
