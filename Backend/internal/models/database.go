@@ -107,7 +107,7 @@ type TaskComment struct {
 	CreatedAt  time.Time  `db:"created_at" gorm:"column:created_at;autoCreateTime;index"`
 	UpdatedAt  *time.Time `db:"updated_at" gorm:"column:updated_at;autoUpdateTime"`
 	IsActive   bool       `db:"is_active" gorm:"column:is_active;default:true"`
-	
+
 	// GORM relationships
 	Task *Task `gorm:"foreignKey:TaskID;references:ID"`
 	User *User `gorm:"foreignKey:UserID;references:ID"`
@@ -131,7 +131,7 @@ type TaskCategory struct {
 	UpdatedAt   *time.Time `db:"updated_at" gorm:"column:updated_at;autoUpdateTime"`
 	UpdatedBy   *int       `db:"updated_by" gorm:"column:updated_by"`
 	IsActive    bool       `db:"is_active" gorm:"column:is_active;default:true"`
-	
+
 	// GORM relationships
 	Project *Project `gorm:"foreignKey:ProjectID;references:ID"`
 }
@@ -148,7 +148,7 @@ type TaskCategoryMap struct {
 	CategoryID int       `db:"category_id" gorm:"column:category_id;not null;index"`
 	AssignedAt time.Time `db:"assigned_at" gorm:"column:assigned_at;autoCreateTime"`
 	AssignedBy *int      `db:"assigned_by" gorm:"column:assigned_by"`
-	
+
 	// GORM relationships
 	Task     *Task         `gorm:"foreignKey:TaskID;references:ID"`
 	Category *TaskCategory `gorm:"foreignKey:CategoryID;references:ID"`
@@ -229,14 +229,14 @@ type UserSettings struct {
 	ID                   int       `db:"id" gorm:"primaryKey;column:id"`
 	SettingsUID          uuid.UUID `db:"settings_uid" gorm:"type:uuid;default:gen_random_uuid();column:settings_uid;uniqueIndex"`
 	UserID               int       `db:"user_id" gorm:"column:user_id;not null;uniqueIndex"`
-	Theme                string    `db:"theme" gorm:"column:theme;default:'projectnest-default';index"`    // theme name
-	Language             string    `db:"language" gorm:"column:language;default:'en'"`                      // preferred language
-	Timezone             string    `db:"timezone" gorm:"column:timezone;default:'UTC'"`                     // user timezone
+	Theme                string    `db:"theme" gorm:"column:theme;default:'projectnest-default';index"` // theme name
+	Language             string    `db:"language" gorm:"column:language;default:'en'"`                  // preferred language
+	Timezone             string    `db:"timezone" gorm:"column:timezone;default:'UTC'"`                 // user timezone
 	NotificationsEnabled bool      `db:"notifications_enabled" gorm:"column:notifications_enabled;default:true"`
 	EmailNotifications   bool      `db:"email_notifications" gorm:"column:email_notifications;default:true"`
 	SoundEnabled         bool      `db:"sound_enabled" gorm:"column:sound_enabled;default:true"`
-	CompactMode          bool      `db:"compact_mode" gorm:"column:compact_mode;default:false"`       // compact UI mode
-	AutoSave             bool      `db:"auto_save" gorm:"column:auto_save;default:true"`              // auto-save feature
+	CompactMode          bool      `db:"compact_mode" gorm:"column:compact_mode;default:false"`          // compact UI mode
+	AutoSave             bool      `db:"auto_save" gorm:"column:auto_save;default:true"`                 // auto-save feature
 	AutoSaveInterval     int       `db:"auto_save_interval" gorm:"column:auto_save_interval;default:30"` // in seconds
 	CreatedAt            time.Time `db:"created_at" gorm:"column:created_at;autoCreateTime"`
 	UpdatedAt            time.Time `db:"updated_at" gorm:"column:updated_at;autoUpdateTime"`

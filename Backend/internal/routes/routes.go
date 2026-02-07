@@ -144,15 +144,15 @@ func SetupRoutes(
 				tasks.POST("/:uid/assignees/bulk", taskAssigneeHandler.BulkAssignUsersToTask)
 
 				// Task comment routes
-			tasks.GET("/:uid/comments", taskCommentHandler.GetCommentsByTaskUID)
-			tasks.POST("/comments", taskCommentHandler.CreateComment)
-			tasks.PUT("/comments/:comment_uid", taskCommentHandler.UpdateComment)
-			tasks.DELETE("/comments/:comment_uid", taskCommentHandler.DeleteComment)
+				tasks.GET("/:uid/comments", taskCommentHandler.GetCommentsByTaskUID)
+				tasks.POST("/comments", taskCommentHandler.CreateComment)
+				tasks.PUT("/comments/:comment_uid", taskCommentHandler.UpdateComment)
+				tasks.DELETE("/comments/:comment_uid", taskCommentHandler.DeleteComment)
 
-			// Task category assignment routes
-			tasks.GET("/:uid/categories", taskCategoryHandler.GetCategoriesByTaskUID)
-			tasks.POST("/:uid/categories", taskCategoryHandler.AssignCategoriesToTask)
-			tasks.DELETE("/:uid/categories/:category_uid", taskCategoryHandler.RemoveCategoryFromTask)
+				// Task category assignment routes
+				tasks.GET("/:uid/categories", taskCategoryHandler.GetCategoriesByTaskUID)
+				tasks.POST("/:uid/categories", taskCategoryHandler.AssignCategoriesToTask)
+				tasks.DELETE("/:uid/categories/:category_uid", taskCategoryHandler.RemoveCategoryFromTask)
 			}
 
 			// Category routes

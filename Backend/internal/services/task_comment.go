@@ -18,8 +18,8 @@ type TaskCommentService struct {
 
 func NewTaskCommentService(
 	commentRepo *repositories.TaskCommentRepository,
-	taskRepo    repositories.TaskRepository,
-	userRepo    repositories.UserRepository,
+	taskRepo repositories.TaskRepository,
+	userRepo repositories.UserRepository,
 ) *TaskCommentService {
 	return &TaskCommentService{
 		commentRepo: commentRepo,

@@ -26,9 +26,9 @@ func ConnectGORM(cfg *config.Config) (*gorm.DB, error) {
 
 	// Configure GORM with custom logger and disable prepared statements
 	gormConfig := &gorm.Config{
-		Logger:                 gormlogger.Default.LogMode(gormlogger.Info),
-		PrepareStmt:            false, // Disable prepared statements to avoid conflicts
-		DisableForeignKeyConstraintWhenMigrating: true, // Let existing foreign keys stay
+		Logger:                                   gormlogger.Default.LogMode(gormlogger.Info),
+		PrepareStmt:                              false, // Disable prepared statements to avoid conflicts
+		DisableForeignKeyConstraintWhenMigrating: true,  // Let existing foreign keys stay
 	}
 
 	// Connect to database
@@ -61,7 +61,7 @@ func AutoMigrate(db *gorm.DB) error {
 
 	// Create new tables manually using raw SQL to avoid GORM trying to recreate existing tables
 	// This approach prevents GORM from following foreign key references and trying to create Task, User, etc.
-	
+
 	// 1. Create task_comment table
 	if err := db.Exec(`
 		CREATE TABLE IF NOT EXISTS task_comment (
@@ -120,9 +120,9 @@ func AutoMigrate(db *gorm.DB) error {
 	db.Exec("CREATE INDEX IF NOT EXISTS idx_task_category_project_id ON task_category(project_id)")
 	db.Exec("CREATE INDEX IF NOT EXISTS idx_task_category_map_task_id ON task_category_map(task_id)")
 	db.Exec("CREATE INDEX IF NOT EXISTS idx_task_category_map_category_id ON task_category_map(category_id)")
-	
+
 	log.Info("All indexes created successfully")
 	log.Info("New table migrations completed successfully")
-	
+
 	return nil
 }
