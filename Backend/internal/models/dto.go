@@ -364,3 +364,58 @@ type UserSettingsResponse struct {
 	CreatedAt            time.Time `json:"created_at"`
 	UpdatedAt            time.Time `json:"updated_at"`
 }
+
+// Task Comment DTOs
+type TaskCommentRequest struct {
+	TaskUID uuid.UUID `json:"task_uid" validate:"required"`
+	Content string    `json:"content" validate:"required,min=1"`
+}
+
+type TaskCommentResponse struct {
+	CommentUID uuid.UUID  `json:"comment_uid"`
+	TaskUID    uuid.UUID  `json:"task_uid"`
+	UserUID    uuid.UUID  `json:"user_uid"`
+	UserName   string     `json:"user_name"`
+	Content    string     `json:"content"`
+	CreatedAt  time.Time  `json:"created_at"`
+	UpdatedAt  *time.Time `json:"updated_at"`
+}
+
+type TaskCommentUpdateRequest struct {
+	Content string `json:"content" validate:"required,min=1"`
+}
+
+// Task Category DTOs
+type TaskCategoryRequest struct {
+	ProjectUID  uuid.UUID `json:"project_uid" validate:"required"`
+	Name        string    `json:"name" validate:"required,min=1,max=100"`
+	Color       string    `json:"color" validate:"omitempty,len=7,startswith=#"`
+	Description *string   `json:"description"`
+}
+
+type TaskCategoryResponse struct {
+	CategoryUID uuid.UUID  `json:"category_uid"`
+	ProjectUID  uuid.UUID  `json:"project_uid"`
+	Name        string     `json:"name"`
+	Color       string     `json:"color"`
+	Description *string    `json:"description"`
+	CreatedAt   time.Time  `json:"created_at"`
+	UpdatedAt   *time.Time `json:"updated_at"`
+}
+
+type TaskCategoryUpdateRequest struct {
+	Name        *string `json:"name" validate:"omitempty,min=1,max=100"`
+	Color       *string `json:"color" validate:"omitempty,len=7,startswith=#"`
+	Description *string `json:"description"`
+}
+
+// Task Category Assignment DTOs
+type AssignCategoryToTaskRequest struct {
+	TaskUID     uuid.UUID   `json:"task_uid" validate:"required"`
+	CategoryIDs []uuid.UUID `json:"category_ids" validate:"required,min=1"`
+}
+
+type TaskWithCategoriesResponse struct {
+	TaskResponse
+	Categories []TaskCategoryResponse `json:"categories"`
+}

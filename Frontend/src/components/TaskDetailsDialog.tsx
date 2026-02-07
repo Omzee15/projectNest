@@ -9,20 +9,163 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Flag, User, Clock, Edit, Users } from 'lucide-react';
-import { Task } from '@/types';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { Calendar, Flag, User, Clock, Edit, Users, MessageSquare, Tag, Send, Trash2, X, Plus } from 'lucide-react';
+import { Task, TaskComment, TaskCategory } from '@/types';
 import { ColorIndicator } from '@/components/ui/color-picker';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { formatDistanceToNow } from 'date-fns';
+import { apiService } from '@/services/api';
+import { useToast } from '@/hooks/use-toast';
+import { ManageCategoriesDialog } from './ManageCategoriesDialog';
 
 interface TaskDetailsDialogProps {
   task?: Task;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onEditTask: (task: Task) => void;
+  projectUid?: string;
 }
 
-export function TaskDetailsDialog({ task, open, onOpenChange, onEditTask }: TaskDetailsDialogProps) {
+export function TaskDetailsDialog({ task, open, onOpenChange, onEditTask, projectUid }: TaskDetailsDialogProps) {
+  const [comments, setComments] = useState<TaskComment[]>([]);
+  const [categories, setCategories] = useState<TaskCategory[]>([]);
+  const [projectCategories, setProjectCategories] = useState<TaskCategory[]>([]);
+  const [newComment, setNewComment] = useState('');
+  const [loadingComments, setLoadingComments] = useState(false);
+  const [loadingCategories, setLoadingCategories] = useState(false);
+  const [categoryPopoverOpen, setCategoryPopoverOpen] = useState(false);
+  const [showManageCategories, setShowManageCategories] = useState(false);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (open && task) {
+      loadComments();
+      loadCategories();
+      if (projectUid) {
+        loadProjectCategories();
+      }
+    }
+  }, [open, task?.task_uid]);
+
+  const loadComments = async () => {
+    if (!task) return;
+    try {
+      setLoadingComments(true);
+      const response = await apiService.getTaskComments(task.task_uid);
+      setComments(response.data || []);
+    } catch (error: any) {
+      console.error('Failed to load comments:', error);
+    } finally {
+      setLoadingComments(false);
+    }
+  };
+
+  const loadCategories = async () => {
+    if (!task) return;
+    try {
+      setLoadingCategories(true);
+      const response = await apiService.getTaskCategories(task.task_uid);
+      setCategories(response.data || []);
+    } catch (error: any) {
+      console.error('Failed to load categories:', error);
+    } finally {
+      setLoadingCategories(false);
+    }
+  };
+
+  const loadProjectCategories = async () => {
+    if (!projectUid) return;
+    try {
+      const response = await apiService.getProjectCategories(projectUid);
+      setProjectCategories(response.data || []);
+    } catch (error: any) {
+      console.error('Failed to load project categories:', error);
+    }
+  };
+
+  const fetchProjectCategories = loadProjectCategories;
+
+  const handleAddComment = async () => {
+    if (!task || !newComment.trim()) return;
+
+    try {
+      await apiService.createTaskComment({
+        task_uid: task.task_uid,
+        content: newComment.trim(),
+      });
+
+      setNewComment('');
+      loadComments();
+      
+      toast({
+        title: 'Success',
+        description: 'Comment added successfully',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to add comment',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleDeleteComment = async (commentUid: string) => {
+    if (!confirm('Delete this comment?')) return;
+
+    try {
+      await apiService.deleteTaskComment(commentUid);
+      loadComments();
+      
+      toast({
+        title: 'Success',
+        description: 'Comment deleted',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to delete comment',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleToggleCategory = async (categoryUid: string) => {
+    if (!task) return;
+
+    const isAssigned = categories.some(c => c.category_uid === categoryUid);
+
+    try {
+      if (isAssigned) {
+        await apiService.removeCategoryFromTask(task.task_uid, categoryUid);
+      } else {
+        // Assign this category (note: backend replaces all, so we need to send all UIDs)
+        const newCategoryUids = [...categories.map(c => c.category_uid), categoryUid];
+        await apiService.assignCategoriesToTask(task.task_uid, newCategoryUids);
+      }
+
+      loadCategories();
+      
+      toast({
+        title: 'Success',
+        description: isAssigned ? 'Category removed' : 'Category added',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to update categories',
+        variant: 'destructive',
+      });
+    }
+  };
+
   if (!task) return null;
 
   const formatDate = (dateString: string) => {
@@ -71,6 +214,7 @@ export function TaskDetailsDialog({ task, open, onOpenChange, onEditTask }: Task
   };
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto overflow-x-hidden">
         <DialogHeader>
@@ -159,6 +303,91 @@ export function TaskDetailsDialog({ task, open, onOpenChange, onEditTask }: Task
             </div>
           )}
 
+          {/* Categories */}
+          <div className="space-y-3 border-t pt-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                <Tag className="h-4 w-4" />
+                Categories
+              </h3>
+              <Popover open={categoryPopoverOpen} onOpenChange={setCategoryPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" size="sm">
+                    <Plus className="h-4 w-4 mr-1" />
+                    Add
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80" align="end">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-medium text-sm">Manage Categories</h4>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setShowManageCategories(true);
+                          setCategoryPopoverOpen(false);
+                        }}
+                        className="h-7"
+                      >
+                        <Plus className="h-3 w-3 mr-1" />
+                        Create New
+                      </Button>
+                    </div>
+                    
+                    {projectCategories.length === 0 ? (
+                      <p className="text-sm text-muted-foreground text-center py-4">
+                        No categories yet. Create one to get started!
+                      </p>
+                    ) : (
+                      <div className="space-y-2">
+                        <p className="text-xs text-muted-foreground">
+                          Click to add or remove:
+                        </p>
+                        <div className="flex flex-wrap gap-2 max-h-60 overflow-y-auto">
+                          {projectCategories.map((category) => {
+                            const isAssigned = categories.some(c => c.category_uid === category.category_uid);
+                            return (
+                              <Badge
+                                key={category.category_uid}
+                                variant={isAssigned ? "default" : "outline"}
+                                className="cursor-pointer transition-all hover:scale-105"
+                                style={isAssigned ? { backgroundColor: category.color, borderColor: category.color, color: 'white' } : { borderColor: category.color, color: category.color }}
+                                onClick={() => handleToggleCategory(category.category_uid)}
+                              >
+                                {category.name}
+                                {isAssigned && <X className="ml-1 h-3 w-3" />}
+                              </Badge>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </div>
+            
+            {/* Current Categories */}
+            <div className="flex flex-wrap gap-2">
+              {loadingCategories ? (
+                <span className="text-sm text-muted-foreground">Loading...</span>
+              ) : categories.length === 0 ? (
+                <span className="text-sm text-muted-foreground italic">No categories assigned</span>
+              ) : (
+                categories.map((category) => (
+                  <Badge
+                    key={category.category_uid}
+                    style={{ backgroundColor: category.color, borderColor: category.color }}
+                    className="text-white"
+                  >
+                    {category.name}
+                  </Badge>
+                ))
+              )}
+            </div>
+          </div>
+
           {/* Due Date */}
           {task.due_date && (
             <div className="space-y-2">
@@ -225,6 +454,81 @@ export function TaskDetailsDialog({ task, open, onOpenChange, onEditTask }: Task
               )}
             </div>
           </div>
+
+          {/* Comments Section */}
+          <div className="space-y-3 border-t pt-4">
+            <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+              <MessageSquare className="h-4 w-4" />
+              Comments ({comments.length})
+            </h3>
+
+            {/* Add Comment Form */}
+            <div className="flex gap-2">
+              <Textarea
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                placeholder="Add a comment..."
+                rows={2}
+                className="flex-1"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                    handleAddComment();
+                  }
+                }}
+              />
+              <Button
+                onClick={handleAddComment}
+                disabled={!newComment.trim()}
+                size="sm"
+              >
+                <Send className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {/* Comments List */}
+            <div className="space-y-3 max-h-64 overflow-y-auto">
+              {loadingComments ? (
+                <div className="text-center py-4 text-sm text-muted-foreground">
+                  Loading comments...
+                </div>
+              ) : comments.length === 0 ? (
+                <div className="text-center py-4 text-sm text-muted-foreground">
+                  No comments yet. Be the first to comment!
+                </div>
+              ) : (
+                comments.map((comment) => (
+                  <div
+                    key={comment.comment_uid}
+                    className="bg-muted/50 rounded-lg p-3 space-y-2"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium">
+                            {comment.user_name || `User ${comment.user_id}`}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
+                          </span>
+                        </div>
+                        <p className="text-sm mt-1 whitespace-pre-wrap break-words">
+                          {comment.content}
+                        </p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteComment(comment.comment_uid)}
+                        className="flex-shrink-0"
+                      >
+                        <Trash2 className="h-3 w-3 text-destructive" />
+                      </Button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
         </div>
 
         <DialogFooter>
@@ -234,5 +538,18 @@ export function TaskDetailsDialog({ task, open, onOpenChange, onEditTask }: Task
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+    {/* Manage Categories Dialog */}
+    {showManageCategories && (
+      <ManageCategoriesDialog
+        open={showManageCategories}
+        onOpenChange={setShowManageCategories}
+        projectUid={projectUid}
+        onCategoriesUpdated={() => {
+          fetchProjectCategories();
+        }}
+      />
+    )}
+    </>
   );
 }

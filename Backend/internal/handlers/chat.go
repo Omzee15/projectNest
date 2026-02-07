@@ -48,7 +48,7 @@ func (h *ChatHandler) GetConversations(c *gin.Context) {
 
 func (h *ChatHandler) GetConversationWithMessages(c *gin.Context) {
 	// Get conversation UID from URL
-	conversationUIDStr := c.Param("conversationUid")
+	conversationUIDStr := c.Param("uid")
 	conversationUID, err := uuid.Parse(conversationUIDStr)
 	if err != nil {
 		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid conversation ID")
@@ -141,7 +141,7 @@ func (h *ChatHandler) CreateMessage(c *gin.Context) {
 
 func (h *ChatHandler) DeleteConversation(c *gin.Context) {
 	// Get conversation UID from URL
-	conversationUIDStr := c.Param("conversationUid")
+	conversationUIDStr := c.Param("uid")
 	conversationUID, err := uuid.Parse(conversationUIDStr)
 	if err != nil {
 		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid conversation ID")

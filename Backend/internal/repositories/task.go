@@ -52,6 +52,26 @@ func (r *taskRepository) GetByListID(ctx context.Context, listID int) ([]models.
 	return tasks, nil
 }
 
+func (r *taskRepository) GetByID(ctx context.Context, id int) (*models.Task, error) {
+	query := `
+		SELECT id, task_uid, list_id, title, description, priority, status, color, position, is_completed,
+			   due_date, completed_at, created_at, created_by, updated_at, updated_by, is_active
+		FROM task
+		WHERE id = $1 AND is_active = true`
+
+	var t models.Task
+	err := r.db.QueryRow(ctx, query, id).Scan(
+		&t.ID, &t.TaskUID, &t.ListID, &t.Title, &t.Description, &t.Priority, &t.Status,
+		&t.Color, &t.Position, &t.IsCompleted, &t.DueDate, &t.CompletedAt,
+		&t.CreatedAt, &t.CreatedBy, &t.UpdatedAt, &t.UpdatedBy, &t.IsActive,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get task by ID: %w", err)
+	}
+
+	return &t, nil
+}
+
 func (r *taskRepository) GetByUID(ctx context.Context, uid uuid.UUID) (*models.Task, error) {
 	query := `
 		SELECT id, task_uid, list_id, title, description, priority, status, color, position, is_completed,

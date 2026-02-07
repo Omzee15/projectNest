@@ -15,7 +15,25 @@ import (
 )
 
 // SetupRoutes configures all the routes for the application
-func SetupRoutes(r *gin.Engine, projectHandler *handlers.ProjectHandler, listHandler *handlers.ListHandler, taskHandler *handlers.TaskHandler, taskAssigneeHandler *handlers.TaskAssigneeHandler, canvasHandler *handlers.CanvasHandler, noteHandler *handlers.NoteHandler, folderHandler *handlers.NoteFolderHandler, chatHandler *handlers.ChatHandler, authHandler *handlers.AuthHandler, aiProjectHandler *handlers.AIProjectCreationHandler, settingsHandler *handlers.UserSettingsHandler, authService *services.AuthService, projectRepo repositories.ProjectRepository, db *pgxpool.Pool) {
+func SetupRoutes(
+	r *gin.Engine,
+	projectHandler *handlers.ProjectHandler,
+	listHandler *handlers.ListHandler,
+	taskHandler *handlers.TaskHandler,
+	taskAssigneeHandler *handlers.TaskAssigneeHandler,
+	taskCommentHandler *handlers.TaskCommentHandler,
+	taskCategoryHandler *handlers.TaskCategoryHandler,
+	canvasHandler *handlers.CanvasHandler,
+	noteHandler *handlers.NoteHandler,
+	folderHandler *handlers.NoteFolderHandler,
+	chatHandler *handlers.ChatHandler,
+	authHandler *handlers.AuthHandler,
+	aiProjectHandler *handlers.AIProjectCreationHandler,
+	settingsHandler *handlers.UserSettingsHandler,
+	authService *services.AuthService,
+	projectRepo repositories.ProjectRepository,
+	db *pgxpool.Pool,
+) {
 	// Add middleware
 	r.Use(middleware.RequestLogging())
 
@@ -124,7 +142,29 @@ func SetupRoutes(r *gin.Engine, projectHandler *handlers.ProjectHandler, listHan
 				tasks.POST("/:uid/assignees", taskAssigneeHandler.AssignUserToTask)
 				tasks.DELETE("/:uid/assignees/:userUid", taskAssigneeHandler.UnassignUserFromTask)
 				tasks.POST("/:uid/assignees/bulk", taskAssigneeHandler.BulkAssignUsersToTask)
+
+				// Task comment routes
+			tasks.GET("/:uid/comments", taskCommentHandler.GetCommentsByTaskUID)
+			tasks.POST("/comments", taskCommentHandler.CreateComment)
+			tasks.PUT("/comments/:comment_uid", taskCommentHandler.UpdateComment)
+			tasks.DELETE("/comments/:comment_uid", taskCommentHandler.DeleteComment)
+
+			// Task category assignment routes
+			tasks.GET("/:uid/categories", taskCategoryHandler.GetCategoriesByTaskUID)
+			tasks.POST("/:uid/categories", taskCategoryHandler.AssignCategoriesToTask)
+			tasks.DELETE("/:uid/categories/:category_uid", taskCategoryHandler.RemoveCategoryFromTask)
 			}
+
+			// Category routes
+			categories := protected.Group("/categories")
+			{
+				categories.POST("", taskCategoryHandler.CreateCategory)
+				categories.PUT("/:category_uid", taskCategoryHandler.UpdateCategory)
+				categories.DELETE("/:category_uid", taskCategoryHandler.DeleteCategory)
+			}
+
+			// Project-specific category routes (in addition to the ones in project routes)
+			protected.GET("/projects/:uid/categories", taskCategoryHandler.GetCategoriesByProjectUID)
 
 			// Phase 3: Note routes (individual note operations)
 			// Note: These are protected through authentication middleware
@@ -149,8 +189,8 @@ func SetupRoutes(r *gin.Engine, projectHandler *handlers.ProjectHandler, listHan
 			// Note: These are protected through authentication middleware
 			chat := protected.Group("/chat")
 			{
-				chat.GET("/conversations/:conversationUid", chatHandler.GetConversationWithMessages)
-				chat.DELETE("/conversations/:conversationUid", chatHandler.DeleteConversation)
+				chat.GET("/conversations/:uid", chatHandler.GetConversationWithMessages)
+				chat.DELETE("/conversations/:uid", chatHandler.DeleteConversation)
 				chat.POST("/messages", chatHandler.CreateMessage)
 			}
 

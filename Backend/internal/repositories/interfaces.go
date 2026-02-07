@@ -46,6 +46,7 @@ type ListRepository interface {
 // TaskRepository defines the interface for task data operations
 type TaskRepository interface {
 	GetByListID(ctx context.Context, listID int) ([]models.Task, error)
+	GetByID(ctx context.Context, id int) (*models.Task, error)
 	GetByUID(ctx context.Context, uid uuid.UUID) (*models.Task, error)
 	Create(ctx context.Context, task *models.Task) error
 	Update(ctx context.Context, uid uuid.UUID, task *models.Task) error

@@ -22,7 +22,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Plus, MoreHorizontal, Edit, Palette, FileText, Database, GitBranch, Bot, Users } from 'lucide-react';
+import { Plus, MoreHorizontal, Edit, Palette, FileText, Database, GitBranch, Bot, Users, Tag } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ListColumn } from './ListColumn';
 import { TaskCard } from './TaskCard';
@@ -46,6 +46,7 @@ interface ProjectBoardProps {
   onListUpdate?: (listUid: string, updatedList: ListWithTasks) => void;
   onTaskUpdate?: (taskUid: string, updatedTask: Task) => void;
   onListMove?: (listId: string, newPosition: number) => void;
+  onManageCategories?: () => void;
 }
 
 export function ProjectBoard({
@@ -60,6 +61,7 @@ export function ProjectBoard({
   onListUpdate,
   onTaskUpdate,
   onListMove,
+  onManageCategories,
 }: ProjectBoardProps) {
   const navigate = useNavigate();
   const [activeTask, setActiveTask] = useState<Task | null>(null);
@@ -326,6 +328,17 @@ export function ProjectBoard({
                 <Bot className="h-4 w-4" />
                 <span className="hidden sm:inline">DEV AI</span>
               </Button>
+              {onManageCategories && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onManageCategories}
+                  className="flex items-center gap-2 whitespace-nowrap flex-shrink-0"
+                >
+                  <Tag className="h-4 w-4" />
+                  <span className="hidden sm:inline">Categories</span>
+                </Button>
+              )}
               <Button
                 variant="outline"
                 size="sm"

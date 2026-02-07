@@ -368,3 +368,47 @@ export interface AIProjectCreationResponse {
   message: string;
   project: Project;
 }
+
+// Task Comments Types
+export interface TaskComment {
+  comment_uid: string;
+  task_id: number;
+  user_id: number;
+  content: string;
+  created_at: string;
+  updated_at?: string;
+  user_name?: string; // May be included in response
+}
+
+export interface TaskCommentRequest {
+  task_uid: string;
+  content: string;
+}
+
+export interface TaskCommentUpdateRequest {
+  content: string;
+}
+
+// Task Categories Types
+export interface TaskCategory {
+  category_uid: string;
+  project_id: number;
+  name: string;
+  color: string;
+  description?: string;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface TaskCategoryRequest {
+  project_uid: string;
+  name: string;
+  color?: string;
+  description?: string;
+}
+
+export interface TaskCategoryUpdateRequest {
+  name?: string;
+  color?: string;
+  description?: string;
+}

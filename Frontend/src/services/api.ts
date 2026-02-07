@@ -15,7 +15,10 @@ import {
   ChatConversation, ChatConversationWithMessages, ChatConversationRequest,
   ChatMessage, ChatMessageRequest,
   // AI types
-  AIProjectCreationRequest, AIProjectCreationResponse
+  AIProjectCreationRequest, AIProjectCreationResponse,
+  // Task Comments and Categories
+  TaskComment, TaskCommentRequest, TaskCommentUpdateRequest,
+  TaskCategory, TaskCategoryRequest, TaskCategoryUpdateRequest
 } from '@/types';
 
 const BACKEND_PORT = import.meta.env.VITE_BACKEND_PORT || '8080';
@@ -398,6 +401,73 @@ class ApiService {
     return this.request<ApiResponse<Project>>('/ai/create-project', {
       method: 'POST',
       body: JSON.stringify({ project_content: projectContent }),
+    });
+  }
+
+  // Task Comments
+  async getTaskComments(taskUid: string): Promise<ApiResponse<TaskComment[]>> {
+    return this.request(`/tasks/${taskUid}/comments`);
+  }
+
+  async createTaskComment(req: TaskCommentRequest): Promise<ApiResponse<TaskComment>> {
+    return this.request('/tasks/comments', {
+      method: 'POST',
+      body: JSON.stringify(req),
+    });
+  }
+
+  async updateTaskComment(commentUid: string, req: TaskCommentUpdateRequest): Promise<ApiResponse<TaskComment>> {
+    return this.request(`/tasks/comments/${commentUid}`, {
+      method: 'PUT',
+      body: JSON.stringify(req),
+    });
+  }
+
+  async deleteTaskComment(commentUid: string): Promise<ApiResponse<any>> {
+    return this.request(`/tasks/comments/${commentUid}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // Task Categories
+  async getProjectCategories(projectUid: string): Promise<ApiResponse<TaskCategory[]>> {
+    return this.request(`/projects/${projectUid}/categories`);
+  }
+
+  async createTaskCategory(req: TaskCategoryRequest): Promise<ApiResponse<TaskCategory>> {
+    return this.request('/categories', {
+      method: 'POST',
+      body: JSON.stringify(req),
+    });
+  }
+
+  async updateTaskCategory(categoryUid: string, req: TaskCategoryUpdateRequest): Promise<ApiResponse<TaskCategory>> {
+    return this.request(`/categories/${categoryUid}`, {
+      method: 'PUT',
+      body: JSON.stringify(req),
+    });
+  }
+
+  async deleteTaskCategory(categoryUid: string): Promise<ApiResponse<any>> {
+    return this.request(`/categories/${categoryUid}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async getTaskCategories(taskUid: string): Promise<ApiResponse<TaskCategory[]>> {
+    return this.request(`/tasks/${taskUid}/categories`);
+  }
+
+  async assignCategoriesToTask(taskUid: string, categoryUids: string[]): Promise<ApiResponse<any>> {
+    return this.request(`/tasks/${taskUid}/categories`, {
+      method: 'POST',
+      body: JSON.stringify(categoryUids),
+    });
+  }
+
+  async removeCategoryFromTask(taskUid: string, categoryUid: string): Promise<ApiResponse<any>> {
+    return this.request(`/tasks/${taskUid}/categories/${categoryUid}`, {
+      method: 'DELETE',
     });
   }
 

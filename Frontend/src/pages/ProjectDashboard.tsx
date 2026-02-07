@@ -5,6 +5,7 @@ import { Navbar } from '@/components/Navbar';
 import { TaskDetailsDialog } from '@/components/TaskDetailsDialog';
 import { EditTaskDialog } from '@/components/EditTaskDialog';
 import { EnhancedDevAIDialog } from '@/components/EnhancedDevAIDialog';
+import { ManageCategoriesDialog } from '@/components/ManageCategoriesDialog';
 import { ProjectWithLists, Project, ListWithTasks, Task } from '@/types';
 import { apiService } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
@@ -20,6 +21,7 @@ export default function ProjectDashboard() {
   const [showTaskDetailsDialog, setShowTaskDetailsDialog] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [showEditTaskDialog, setShowEditTaskDialog] = useState(false);
+  const [showManageCategoriesDialog, setShowManageCategoriesDialog] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -298,6 +300,7 @@ export default function ProjectDashboard() {
         onListUpdate={handleListUpdate}
         onTaskUpdate={handleTaskUpdate}
         onListMove={handleListMove}
+        onManageCategories={() => setShowManageCategoriesDialog(true)}
       />
       
       <TaskDetailsDialog
@@ -305,6 +308,7 @@ export default function ProjectDashboard() {
         open={showTaskDetailsDialog}
         onOpenChange={setShowTaskDetailsDialog}
         onEditTask={handleEditTaskFromDetails}
+        projectUid={project?.project_uid}
       />
       
       <EditTaskDialog
@@ -316,6 +320,13 @@ export default function ProjectDashboard() {
           if (!open) setEditingTask(null);
         }}
         onTaskUpdated={handleTaskUpdated}
+      />
+
+      <ManageCategoriesDialog
+        projectUid={project.project_uid}
+        open={showManageCategoriesDialog}
+        onOpenChange={setShowManageCategoriesDialog}
+        onCategoriesUpdated={loadProject}
       />
 
       {/* Enhanced AI Floating Button - Can create/edit lists and tasks */}

@@ -37,7 +37,7 @@ func main() {
 	cfg := config.Load()
 	log.Info("Configuration loaded")
 
-	// Connect to database
+	// Connect to database (pgx for existing code)
 	db, err := database.Connect(cfg)
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
@@ -45,7 +45,14 @@ func main() {
 	defer db.Close()
 	log.Info("Database connected successfully")
 
-	// Initialize repositories
+	// Connect with GORM for automigrate and new features
+	gormDB, err := database.ConnectGORM(cfg)
+	if err != nil {
+		log.Fatalf("Failed to connect to database with GORM: %v", err)
+	}
+	log.Info("GORM database connected and migrations completed")
+
+	// Initialize repositories (existing pgx-based)
 	userRepo := repositories.NewUserRepository(db)
 	projectRepo := repositories.NewProjectRepository(db, userRepo)
 	listRepo := repositories.NewListRepository(db)
@@ -58,6 +65,10 @@ func main() {
 	chatRepo := repositories.NewChatRepository(db)
 	settingsRepo := repositories.NewUserSettingsRepository(db)
 
+	// New GORM-based repositories
+	taskCommentRepo := repositories.NewTaskCommentRepository(gormDB)
+	taskCategoryRepo := repositories.NewTaskCategoryRepository(gormDB)
+
 	// Initialize services
 	projectService := services.NewProjectService(projectRepo, listRepo, taskRepo, userRepo)
 	listService := services.NewListService(listRepo, taskRepo, projectRepo)
@@ -68,6 +79,10 @@ func main() {
 	folderService := services.NewNoteFolderService(folderRepo, projectRepo)
 	chatService := services.NewChatService(chatRepo, projectRepo, userRepo)
 	settingsService := services.NewUserSettingsService(settingsRepo)
+
+	// New services for task comments and categories
+	taskCommentService := services.NewTaskCommentService(taskCommentRepo, taskRepo, userRepo)
+	taskCategoryService := services.NewTaskCategoryService(taskCategoryRepo, projectRepo, taskRepo)
 
 	// Initialize handlers
 	projectHandler := handlers.NewProjectHandler(projectService)
@@ -81,6 +96,10 @@ func main() {
 	chatHandler := handlers.NewChatHandler(chatService)
 	settingsHandler := handlers.NewUserSettingsHandler(settingsService)
 
+	// New handlers for task comments and categories
+	taskCommentHandler := handlers.NewTaskCommentHandler(taskCommentService)
+	taskCategoryHandler := handlers.NewTaskCategoryHandler(taskCategoryService)
+
 	// AI project creation handler
 	aiProjectHandler := handlers.NewAIProjectCreationHandler(projectService, listService, taskService, canvasService, chatService)
 
@@ -92,7 +111,7 @@ func main() {
 	router := setupRouter(cfg)
 
 	// Setup routes
-	routes.SetupRoutes(router, projectHandler, listHandler, taskHandler, taskAssigneeHandler, canvasHandler, noteHandler, folderHandler, chatHandler, authHandler, aiProjectHandler, settingsHandler, authService, projectRepo, db)
+	routes.SetupRoutes(router, projectHandler, listHandler, taskHandler, taskAssigneeHandler, taskCommentHandler, taskCategoryHandler, canvasHandler, noteHandler, folderHandler, chatHandler, authHandler, aiProjectHandler, settingsHandler, authService, projectRepo, db)
 
 	// Create server
 	server := &http.Server{
