@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { ProjectBoard } from '@/components/ProjectBoard';
 import { Navbar } from '@/components/Navbar';
 import { TaskDetailsDialog } from '@/components/TaskDetailsDialog';
@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 
 export default function ProjectDashboard() {
   const { projectId } = useParams<{ projectId: string }>();
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const [project, setProject] = useState<ProjectWithLists | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -27,6 +28,24 @@ export default function ProjectDashboard() {
   useEffect(() => {
     loadProject();
   }, [projectId]);
+
+  // Handle task query parameter for shareable links
+  useEffect(() => {
+    const taskUid = searchParams.get('task');
+    if (taskUid && project) {
+      // Find the task in the project lists
+      for (const list of project.lists) {
+        const task = (list.tasks || []).find(t => t.task_uid === taskUid);
+        if (task) {
+          setSelectedTask(task);
+          setShowTaskDetailsDialog(true);
+          // Clear the query param after opening the task
+          setSearchParams({});
+          break;
+        }
+      }
+    }
+  }, [project, searchParams]);
 
   const loadProject = async () => {
     if (!projectId) {

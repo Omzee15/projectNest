@@ -17,7 +17,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { Calendar, Flag, User, Clock, Edit, Users, MessageSquare, Tag, Send, Trash2, X, Plus } from 'lucide-react';
+import { Calendar, Flag, User, Clock, Edit, Users, MessageSquare, Tag, Send, Trash2, X, Plus, Link, Check } from 'lucide-react';
 import { Task, TaskComment, TaskCategory } from '@/types';
 import { ColorIndicator } from '@/components/ui/color-picker';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -49,6 +49,7 @@ export function TaskDetailsDialog({ task, open, onOpenChange, onEditTask, projec
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newCategoryColor, setNewCategoryColor] = useState('#3B82F6');
+  const [linkCopied, setLinkCopied] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -98,6 +99,30 @@ export function TaskDetailsDialog({ task, open, onOpenChange, onEditTask, projec
   };
 
   const fetchProjectCategories = loadProjectCategories;
+
+  const handleCopyLink = async () => {
+    if (!task || !projectUid) return;
+    
+    const url = `${window.location.origin}/project/${projectUid}?task=${task.task_uid}`;
+    
+    try {
+      await navigator.clipboard.writeText(url);
+      setLinkCopied(true);
+      toast({
+        title: 'Link copied!',
+        description: 'Shareable task link copied to clipboard',
+      });
+      
+      // Reset the copied state after 2 seconds
+      setTimeout(() => setLinkCopied(false), 2000);
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to copy link to clipboard',
+        variant: 'destructive',
+      });
+    }
+  };
 
   const handleAddComment = async () => {
     if (!task || !newComment.trim()) return;
@@ -272,20 +297,78 @@ export function TaskDetailsDialog({ task, open, onOpenChange, onEditTask, projec
               <DialogDescription className="text-sm sm:text-base">
                 Task Details and Information
               </DialogDescription>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onEditTask(task)}
-                className="flex items-center gap-2 flex-shrink-0"
-              >
-                <Edit className="h-4 w-4" />
-                <span className="hidden sm:inline">Edit</span>
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCopyLink}
+                  className="flex items-center gap-2 flex-shrink-0"
+                  title="Copy shareable link"
+                >
+                  {linkCopied ? (
+                    <Check className="h-4 w-4 text-green-500" />
+                  ) : (
+                    <Link className="h-4 w-4" />
+                  )}
+                  <span className="hidden sm:inline">{linkCopied ? 'Copied!' : 'Share'}</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onEditTask(task)}
+                  className="flex items-center gap-2 flex-shrink-0"
+                >
+                  <Edit className="h-4 w-4" />
+                  <span className="hidden sm:inline">Edit</span>
+                </Button>
+              </div>
             </div>
           </div>
         </DialogHeader>
 
         <div className="space-y-6 max-w-full overflow-hidden">
+          {/* Comments Display Section - Moved to top */}
+          {comments.length > 0 && (
+            <div className="space-y-3">
+              <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                <MessageSquare className="h-4 w-4" />
+                Comments ({comments.length})
+              </h3>
+              <div className="space-y-3 max-h-48 overflow-y-auto">
+                {comments.map((comment) => (
+                  <div
+                    key={comment.comment_uid}
+                    className="bg-muted/50 rounded-lg p-3 space-y-2"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium">
+                            {comment.user_name || `User ${comment.user_id}`}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
+                          </span>
+                        </div>
+                        <p className="text-sm mt-1 whitespace-pre-wrap break-words">
+                          {comment.content}
+                        </p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteComment(comment.comment_uid)}
+                        className="flex-shrink-0"
+                      >
+                        <Trash2 className="h-3 w-3 text-destructive" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Status and Priority Section */}
           <div className="flex items-center gap-4 flex-wrap max-w-full">
             <div className="flex items-center gap-2">
@@ -561,14 +644,12 @@ export function TaskDetailsDialog({ task, open, onOpenChange, onEditTask, projec
             </div>
           </div>
 
-          {/* Comments Section */}
+          {/* Add Comment Form - At the bottom */}
           <div className="space-y-3 border-t pt-4">
             <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <MessageSquare className="h-4 w-4" />
-              Comments ({comments.length})
+              Add Comment
             </h3>
-
-            {/* Add Comment Form */}
             <div className="flex gap-2">
               <Textarea
                 value={newComment}
@@ -590,50 +671,11 @@ export function TaskDetailsDialog({ task, open, onOpenChange, onEditTask, projec
                 <Send className="h-4 w-4" />
               </Button>
             </div>
-
-            {/* Comments List */}
-            <div className="space-y-3 max-h-64 overflow-y-auto">
-              {loadingComments ? (
-                <div className="text-center py-4 text-sm text-muted-foreground">
-                  Loading comments...
-                </div>
-              ) : comments.length === 0 ? (
-                <div className="text-center py-4 text-sm text-muted-foreground">
-                  No comments yet. Be the first to comment!
-                </div>
-              ) : (
-                comments.map((comment) => (
-                  <div
-                    key={comment.comment_uid}
-                    className="bg-muted/50 rounded-lg p-3 space-y-2"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium">
-                            {comment.user_name || `User ${comment.user_id}`}
-                          </span>
-                          <span className="text-xs text-muted-foreground">
-                            {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
-                          </span>
-                        </div>
-                        <p className="text-sm mt-1 whitespace-pre-wrap break-words">
-                          {comment.content}
-                        </p>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteComment(comment.comment_uid)}
-                        className="flex-shrink-0"
-                      >
-                        <Trash2 className="h-3 w-3 text-destructive" />
-                      </Button>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
+            {loadingComments && (
+              <div className="text-center py-2 text-sm text-muted-foreground">
+                Loading comments...
+              </div>
+            )}
           </div>
         </div>
 
