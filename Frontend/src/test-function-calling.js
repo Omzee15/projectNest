@@ -4,7 +4,10 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 // Initialize Gemini AI
-const apiKey = process.env.VITE_GEMINI_API_KEY || 'AIzaSyAjCLlJHuJymK3q94RRJvGk52qIlBXAUwg';
+const apiKey = process.env.VITE_GEMINI_API_KEY;
+if (!apiKey) {
+  throw new Error('VITE_GEMINI_API_KEY is required');
+}
 const genAI = new GoogleGenerativeAI(apiKey);
 
 // Define the project creation function declaration

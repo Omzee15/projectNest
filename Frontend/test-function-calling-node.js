@@ -2,7 +2,7 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 // API Key
-const API_KEY = 'AIzaSyAjCLlJHuJymK3q94RRJvGk52qIlBXAUwg';
+const API_KEY = process.env.VITE_GEMINI_API_KEY || 'YOUR_API_KEY_HERE';
 
 async function testFunctionCalling() {
     try {
