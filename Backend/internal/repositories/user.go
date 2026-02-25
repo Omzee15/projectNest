@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"lucid-lists-backend/internal/models"
@@ -127,6 +128,61 @@ func (r *userRepository) Create(ctx context.Context, user *models.User) error {
 		Info("Successfully created user")
 
 	return nil
+}
+
+func (r *userRepository) SearchUsers(ctx context.Context, query string, excludeProjectID int, limit int) ([]models.UserSearchResult, error) {
+	if limit <= 0 || limit > 20 {
+		limit = 20
+	}
+
+	var rows pgx.Rows
+	var err error
+
+	if excludeProjectID > 0 {
+		// Search users not already in the project
+		searchQuery := `
+			SELECT u.user_uid, u.email, u.name
+			FROM users u
+			WHERE u.is_active = true
+			  AND (u.name ILIKE '%' || $1 || '%' OR u.email ILIKE '%' || $1 || '%')
+			  AND u.id NOT IN (
+				SELECT pm.user_id FROM project_member pm WHERE pm.project_id = $2
+			  )
+			ORDER BY u.name ASC
+			LIMIT $3`
+		rows, err = r.db.Query(ctx, searchQuery, query, excludeProjectID, limit)
+	} else {
+		searchQuery := `
+			SELECT u.user_uid, u.email, u.name
+			FROM users u
+			WHERE u.is_active = true
+			  AND (u.name ILIKE '%' || $1 || '%' OR u.email ILIKE '%' || $1 || '%')
+			ORDER BY u.name ASC
+			LIMIT $2`
+		rows, err = r.db.Query(ctx, searchQuery, query, limit)
+	}
+
+	if err != nil {
+		logger.WithComponent("user-repository").
+			WithFields(map[string]interface{}{
+				"query": query,
+				"error": err.Error(),
+			}).
+			Error("Failed to search users")
+		return nil, fmt.Errorf("failed to search users: %w", err)
+	}
+	defer rows.Close()
+
+	var results []models.UserSearchResult
+	for rows.Next() {
+		var u models.UserSearchResult
+		if err := rows.Scan(&u.UserUID, &u.Email, &u.Name); err != nil {
+			return nil, fmt.Errorf("failed to scan user: %w", err)
+		}
+		results = append(results, u)
+	}
+
+	return results, nil
 }
 
 func (r *userRepository) GetByID(ctx context.Context, id int) (*models.User, error) {

@@ -77,6 +77,9 @@ func SetupRoutes(
 		protected := api.Group("")
 		protected.Use(middleware.Authentication(authService))
 		{
+			// User search route (for adding members)
+			protected.GET("/users/search", projectHandler.SearchUsers)
+
 			// Project routes
 			projects := protected.Group("/projects")
 			{

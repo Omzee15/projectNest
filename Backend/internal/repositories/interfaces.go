@@ -106,6 +106,7 @@ type UserRepository interface {
 	GetByID(ctx context.Context, id int) (*models.User, error)
 	GetByUID(ctx context.Context, uid uuid.UUID) (*models.User, error)
 	Create(ctx context.Context, user *models.User) error
+	SearchUsers(ctx context.Context, query string, excludeProjectID int, limit int) ([]models.UserSearchResult, error)
 }
 
 // ChatRepositoryInterface defines the interface for chat conversation operations

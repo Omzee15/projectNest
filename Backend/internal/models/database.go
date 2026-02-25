@@ -21,6 +21,13 @@ type User struct {
 	IsActive  bool      `db:"is_active" gorm:"column:is_active;default:true"`
 }
 
+// UserSearchResult is a lightweight user model for search results (no sensitive fields)
+type UserSearchResult struct {
+	UserUID uuid.UUID `json:"user_uid"`
+	Email   string    `json:"email"`
+	Name    string    `json:"name"`
+}
+
 type Workspace struct {
 	ID           int        `db:"id" gorm:"primaryKey;column:id"`
 	WorkspaceUID uuid.UUID  `db:"workspace_uid" gorm:"type:uuid;default:gen_random_uuid();column:workspace_uid;uniqueIndex"`

@@ -6,7 +6,7 @@ import {
   ListRequest, ListUpdateRequest,
   TaskRequest, TaskUpdateRequest,
   ProjectProgress, ProjectWithProgress,
-  ProjectMember, TaskAssigneeWithUser,
+  ProjectMember, TaskAssigneeWithUser, UserSearchResult,
   // Phase 3 types
   BrainstormCanvas, Note, NotesResponse,
   CanvasRequest, NoteRequest, NoteUpdateRequest,
@@ -175,6 +175,13 @@ class ApiService {
       method: 'POST',
       body: JSON.stringify({ email, role }),
     });
+  }
+
+  async searchUsers(query: string, projectId?: string): Promise<ApiResponse<UserSearchResult[]>> {
+    const params = new URLSearchParams();
+    if (query) params.set('q', query);
+    if (projectId) params.set('project_uid', projectId);
+    return this.request(`/users/search?${params.toString()}`);
   }
 
   // Lists

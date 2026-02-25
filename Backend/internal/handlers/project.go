@@ -545,3 +545,30 @@ func (h *ProjectHandler) GetProjectMembers(c *gin.Context) {
 
 	utils.SuccessResponse(c, members, "")
 }
+
+// SearchUsers handles GET /api/users/search?q=...&project_uid=...
+func (h *ProjectHandler) SearchUsers(c *gin.Context) {
+	query := c.Query("q")
+
+	var projectUID *uuid.UUID
+	if projectUIDStr := c.Query("project_uid"); projectUIDStr != "" {
+		parsed, err := uuid.Parse(projectUIDStr)
+		if err == nil {
+			projectUID = &parsed
+		}
+	}
+
+	users, err := h.projectService.SearchUsers(c.Request.Context(), query, projectUID)
+	if err != nil {
+		logger.WithComponent("project-handler").
+			WithFields(map[string]interface{}{
+				"query": query,
+				"error": err.Error(),
+			}).
+			Error("Failed to search users")
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to search users")
+		return
+	}
+
+	utils.SuccessResponse(c, users, "")
+}

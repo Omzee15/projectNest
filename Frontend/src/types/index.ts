@@ -99,6 +99,12 @@ export interface ProjectMember {
   joined_at: string;
 }
 
+export interface UserSearchResult {
+  user_uid: string;
+  email: string;
+  name: string;
+}
+
 // Frontend UI Types
 export interface ProjectWithLists extends Project {
   lists: ListWithTasks[] | null;

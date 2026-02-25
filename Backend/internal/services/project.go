@@ -396,3 +396,25 @@ func (s *ProjectService) GetProjectMembers(ctx context.Context, projectUID uuid.
 
 	return response, nil
 }
+
+// SearchUsers searches for users by name or email, optionally excluding members of a project
+func (s *ProjectService) SearchUsers(ctx context.Context, query string, projectUID *uuid.UUID) ([]models.UserSearchResult, error) {
+	excludeProjectID := 0
+	if projectUID != nil {
+		project, err := s.projectRepo.GetByUID(ctx, *projectUID)
+		if err == nil && project != nil {
+			excludeProjectID = project.ID
+		}
+	}
+
+	users, err := s.userRepo.SearchUsers(ctx, query, excludeProjectID, 20)
+	if err != nil {
+		return nil, utils.NewInternalError("Failed to search users")
+	}
+
+	if users == nil {
+		users = []models.UserSearchResult{}
+	}
+
+	return users, nil
+}
