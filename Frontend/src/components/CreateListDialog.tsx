@@ -4,19 +4,26 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ColorPicker } from '@/components/ui/color-picker';
-import { Plus } from 'lucide-react';
+import { Plus, Lock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiService } from '@/services/api';
 import { COLORS } from '@/types';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 interface CreateListDialogProps {
   projectUid: string;
   projectName: string;
   onListCreate?: () => void;
   trigger?: React.ReactNode;
+  canWrite?: boolean;
 }
 
-export function CreateListDialog({ projectUid, projectName, onListCreate, trigger }: CreateListDialogProps) {
+export function CreateListDialog({ projectUid, projectName, onListCreate, trigger, canWrite = true }: CreateListDialogProps) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [color, setColor] = useState<string>(COLORS.WHITE);
@@ -75,16 +82,38 @@ export function CreateListDialog({ projectUid, projectName, onListCreate, trigge
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(newOpen) => {
+      if (!canWrite && newOpen) {
+        toast({
+          title: 'Access Denied',
+          description: 'You do not have permission to create lists. Only users with edit access can create lists.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      setOpen(newOpen);
+    }}>
       <DialogTrigger asChild>
         {trigger || (
-          <Button
-            variant="ghost"
-            className="w-72 h-12 border-2 border-dashed border-border hover:border-border-light hover:bg-muted/50"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add another list
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="w-72 h-12 border-2 border-dashed border-border hover:border-border-light hover:bg-muted/50"
+                  disabled={!canWrite}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add another list
+                </Button>
+              </TooltipTrigger>
+              {!canWrite && (
+                <TooltipContent>
+                  <p>You have view-only access. Only users with edit permission can create lists.</p>
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </TooltipProvider>
         )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-md bg-background border border-border">

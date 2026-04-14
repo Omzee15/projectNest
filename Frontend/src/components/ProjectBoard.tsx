@@ -22,7 +22,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Plus, MoreHorizontal, Edit, Palette, FileText, Database, GitBranch, Bot, Users, Tag } from 'lucide-react';
+import { Plus, MoreHorizontal, Edit, Palette, FileText, Database, GitBranch, Bot, Users, Tag, Eye, Lock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ListColumn } from './ListColumn';
 import { TaskCard } from './TaskCard';
@@ -33,6 +33,7 @@ import { ColorIndicator } from '@/components/ui/color-picker';
 import { ProjectWithLists, Task, ListWithTasks, Project } from '@/types';
 import { apiService } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
+import { useProjectAccess } from '@/hooks/useProjectAccess';
 
 interface ProjectBoardProps {
   project: ProjectWithLists;
@@ -68,6 +69,7 @@ export function ProjectBoard({
   const [activeList, setActiveList] = useState<ListWithTasks | null>(null);
   const [showEditProjectDialog, setShowEditProjectDialog] = useState(false);
   const { toast } = useToast();
+  const { canWrite, isOwner, loading: accessLoading } = useProjectAccess(project.project_uid);
   
   // Use project.lists directly instead of local state, with fallback to empty array
   const lists = project.lists || [];
@@ -81,6 +83,15 @@ export function ProjectBoard({
   );
 
   const handleDragStart = (event: DragStartEvent) => {
+    if (!canWrite) {
+      toast({
+        title: 'Access Denied',
+        description: 'You do not have permission to move items. Only users with edit access can move tasks.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     const { active } = event;
     
     // Check if we're dragging a task
@@ -371,6 +382,7 @@ export function ProjectBoard({
                   onTaskDelete={onDeleteTask}
                   onTaskUpdate={handleTaskUpdate}
                   isDraggable={true}
+                  canWrite={canWrite}
                 />
               ))}
               
@@ -379,6 +391,7 @@ export function ProjectBoard({
                   projectUid={project.project_uid}
                   projectName={project.name}
                   onListCreate={() => onAddList?.()}
+                  canWrite={canWrite}
                 />
               </div>
             </div>

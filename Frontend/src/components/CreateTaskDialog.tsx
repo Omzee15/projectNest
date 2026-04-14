@@ -6,10 +6,16 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { ColorPicker } from '@/components/ui/color-picker';
-import { Plus, Calendar, Flag } from 'lucide-react';
+import { Plus, Calendar, Flag, Lock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { COLORS } from '@/types';
 import { TaskAssigneeSelector } from './TaskAssigneeSelector';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 interface CreateTaskDialogProps {
   listUid: string;
@@ -17,9 +23,10 @@ interface CreateTaskDialogProps {
   projectId: string;
   onTaskCreate?: (taskData: any) => void;
   trigger?: React.ReactNode;
+  canWrite?: boolean;
 }
 
-export function CreateTaskDialog({ listUid, listName, projectId, onTaskCreate, trigger }: CreateTaskDialogProps) {
+export function CreateTaskDialog({ listUid, listName, projectId, onTaskCreate, trigger, canWrite = true }: CreateTaskDialogProps) {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -85,17 +92,39 @@ export function CreateTaskDialog({ listUid, listName, projectId, onTaskCreate, t
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(newOpen) => {
+      if (!canWrite && newOpen) {
+        toast({
+          title: 'Access Denied',
+          description: 'You do not have permission to create tasks. Only users with edit access can create tasks.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      setOpen(newOpen);
+    }}>
       <DialogTrigger asChild>
         {trigger || (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-full justify-start text-muted-foreground hover:text-foreground hover:bg-secondary"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add a card
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full justify-start text-muted-foreground hover:text-foreground hover:bg-secondary"
+                  disabled={!canWrite}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add a card
+                </Button>
+              </TooltipTrigger>
+              {!canWrite && (
+                <TooltipContent>
+                  <p>You have view-only access. Only users with edit permission can create tasks.</p>
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </TooltipProvider>
         )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[600px] md:max-w-[650px] max-h-[85vh] overflow-y-auto bg-background border border-border">

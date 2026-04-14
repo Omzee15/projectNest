@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Users, Crown, Loader2, PenLine } from 'lucide-react';
+import { Users, Crown, Loader2, PenLine, Eye } from 'lucide-react';
 import { apiService } from '@/services/api';
 import { ProjectMember } from '@/types';
 import { useToast } from '@/hooks/use-toast';
+import { getCurrentUserUid } from '@/utils/auth';
 import { AddProjectMemberDialog } from './AddProjectMemberDialog';
 import {
   Tooltip,
@@ -63,10 +64,46 @@ export function ProjectMembersList({ projectId }: ProjectMembersListProps) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <div>
+        <div className="flex items-center gap-2">
           <p className="text-sm text-muted-foreground">
             {members.length} {members.length === 1 ? 'member' : 'members'}
           </p>
+          {(() => {
+            const currentUserUid = getCurrentUserUid();
+            const currentMember = members.find(
+              (m) => m.user_uid === currentUserUid
+            );
+            if (currentMember) {
+              const isViewOnly = !currentMember.can_write && currentMember.role !== 'owner';
+              return (
+                <Tooltip>
+                  <TooltipTrigger>
+                    <Badge variant={isViewOnly ? 'outline' : 'secondary'} className="text-xs">
+                      {isViewOnly ? (
+                        <>
+                          <Eye className="h-3 w-3 mr-1" />
+                          Your Access: View Only
+                        </>
+                      ) : (
+                        <>
+                          <PenLine className="h-3 w-3 mr-1" />
+                          Your Access: Can Edit
+                        </>
+                      )}
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>
+                      {isViewOnly
+                        ? 'You can view but cannot create or edit items'
+                        : 'You have full edit access to this project'}
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              );
+            }
+            return null;
+          })()}
         </div>
         <AddProjectMemberDialog projectId={projectId} onMemberAdded={loadMembers} members={members} />
       </div>

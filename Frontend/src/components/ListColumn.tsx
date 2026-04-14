@@ -43,6 +43,7 @@ interface ListColumnProps {
   onTaskUpdate?: (taskUid: string, updatedTask: Task) => void;
   isDraggable?: boolean;
   isDragOverlay?: boolean;
+  canWrite?: boolean;
 }
 
 export function ListColumn({ 
@@ -55,7 +56,8 @@ export function ListColumn({
   onTaskDelete, 
   onTaskUpdate,
   isDraggable = false,
-  isDragOverlay = false
+  isDragOverlay = false,
+  canWrite = true
 }: ListColumnProps) {
   const { setNodeRef: setDroppableRef } = useDroppable({
     id: list.list_uid,
@@ -256,6 +258,7 @@ export function ListColumn({
           listName={list.name}
           projectId={projectId}
           onTaskCreate={(taskData) => onAddTask?.(list.list_uid, taskData)}
+          canWrite={canWrite}
         />
       </CardContent>
 
