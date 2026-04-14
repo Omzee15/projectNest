@@ -559,3 +559,57 @@ func (r *projectRepository) IsOwner(ctx context.Context, projectID int, userUID 
 	}
 	return role == "owner", nil
 }
+// GetMemberInfo returns the role and can_write status of a user in a project
+func (r *projectRepository) GetMemberInfo(ctx context.Context, projectID int, userUID uuid.UUID) (role string, canWrite bool, err error) {
+	// Get user by UUID to get the integer ID
+	user, err := r.userRepo.GetByUID(ctx, userUID)
+	if err != nil {
+		return "", false, fmt.Errorf("failed to get user: %w", err)
+	}
+	if user == nil {
+		return "", false, fmt.Errorf("user not found")
+	}
+
+	query := `
+		SELECT role, can_write
+		FROM project_member
+		WHERE project_id = $1 AND user_id = $2`
+
+	err = r.db.QueryRow(ctx, query, projectID, user.ID).Scan(&role, &canWrite)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return "", false, fmt.Errorf("user is not a member of this project")
+		}
+		return "", false, fmt.Errorf("failed to get member info: %w", err)
+	}
+
+	return role, canWrite, nil
+}
+
+// UpdateMemberWriteAccess updates the write access for a project member
+func (r *projectRepository) UpdateMemberWriteAccess(ctx context.Context, projectID int, userUID uuid.UUID, canWrite bool) error {
+	// Get user by UUID to get the integer ID
+	user, err := r.userRepo.GetByUID(ctx, userUID)
+	if err != nil {
+		return fmt.Errorf("failed to get user: %w", err)
+	}
+	if user == nil {
+		return fmt.Errorf("user not found")
+	}
+
+	query := `
+		UPDATE project_member 
+		SET can_write = $1
+		WHERE project_id = $2 AND user_id = $3`
+
+	result, err := r.db.Exec(ctx, query, canWrite, projectID, user.ID)
+	if err != nil {
+		return fmt.Errorf("failed to update member write access: %w", err)
+	}
+
+	if result.RowsAffected() == 0 {
+		return fmt.Errorf("member not found in project")
+	}
+
+	return nil
+}

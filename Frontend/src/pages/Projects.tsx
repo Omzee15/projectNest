@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { 
   AlertDialog,
@@ -21,7 +22,7 @@ import { DashboardAIChat } from '@/components/DashboardAIChat';
 import { Project, ProjectWithProgress } from '@/types';
 import { apiService } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Calendar, Users, ArrowRight, Loader2, Trash2, MoreVertical, Bot } from 'lucide-react';
+import { Plus, Calendar, Users, ArrowRight, Loader2, Trash2, MoreVertical, Bot, Eye } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -192,9 +193,17 @@ export default function Projects() {
                   <CardHeader>
                     <div className="flex items-start justify-between">
                       <div className="flex-1 min-w-0">
-                        <CardTitle className="text-lg sm:text-xl group-hover:text-primary transition-colors truncate">
-                          {project.name}
-                        </CardTitle>
+                        <div className="flex items-center gap-2 mb-2">
+                          <CardTitle className="text-lg sm:text-xl group-hover:text-primary transition-colors truncate">
+                            {project.name}
+                          </CardTitle>
+                          {project.can_write === false && project.role !== 'owner' && (
+                            <Badge variant="outline" className="text-xs whitespace-nowrap">
+                              <Eye className="h-3 w-3 mr-1" />
+                              View Only
+                            </Badge>
+                          )}
+                        </div>
                         <div className="flex items-center gap-2 mt-2 flex-wrap">
                           <span 
                             className={`px-2 py-1 text-xs rounded-md border ${getStatusColor(project.status)}`}

@@ -23,6 +23,8 @@ type ProjectRepository interface {
 	IsMember(ctx context.Context, projectID int, userUID uuid.UUID) (bool, error)
 	GetMemberRole(ctx context.Context, projectID int, userUID uuid.UUID) (string, error)
 	IsOwner(ctx context.Context, projectID int, userUID uuid.UUID) (bool, error)
+	GetMemberInfo(ctx context.Context, projectID int, userUID uuid.UUID) (role string, canWrite bool, err error)
+	UpdateMemberWriteAccess(ctx context.Context, projectID int, userUID uuid.UUID, canWrite bool) error
 }
 
 // ProjectMemberRepository defines the interface for project member operations

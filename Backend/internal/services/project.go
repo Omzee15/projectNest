@@ -32,8 +32,25 @@ func (s *ProjectService) GetAllProjects(ctx context.Context, userID int) ([]mode
 		return nil, utils.NewInternalError("Failed to retrieve projects")
 	}
 
+	// Get the current user's UID
+	user, err := s.userRepo.GetByID(ctx, userID)
+	if err != nil {
+		return nil, utils.NewInternalError("Failed to get user information")
+	}
+
 	var response []models.ProjectResponse
 	for _, project := range projects {
+		// Get member info for this project
+		role := "member"
+		canWrite := false
+		
+		memberRole, memberCanWrite, err := s.projectRepo.GetMemberInfo(ctx, project.ID, user.UserUID)
+		if err == nil {
+			role = memberRole
+			canWrite = memberCanWrite
+		}
+		// If error, use defaults
+
 		response = append(response, models.ProjectResponse{
 			ProjectUID:       project.ProjectUID,
 			Name:             project.Name,
@@ -48,6 +65,8 @@ func (s *ProjectService) GetAllProjects(ctx context.Context, userID int) ([]mode
 			FlowchartContent: project.FlowchartContent,
 			CreatedAt:        project.CreatedAt,
 			UpdatedAt:        project.UpdatedAt,
+			CanWrite:         canWrite,
+			Role:             role,
 		})
 	}
 
@@ -430,4 +449,45 @@ func (s *ProjectService) SearchUsers(ctx context.Context, query string, projectU
 	}
 
 	return users, nil
+}
+// UpdateMemberWriteAccess updates the write access for a project member
+func (s *ProjectService) UpdateMemberWriteAccess(ctx context.Context, projectUID uuid.UUID, memberUID uuid.UUID, canWrite bool, requestingUserUID uuid.UUID) error {
+	// Get the project
+	project, err := s.projectRepo.GetByUID(ctx, projectUID)
+	if err != nil {
+		if err.Error() == "project not found" {
+			return utils.NewNotFoundError("Project not found")
+		}
+		return utils.NewInternalError("Failed to get project")
+	}
+
+	// Check if the requesting user is an owner (only owners can change member access)
+	isOwner, err := s.projectRepo.IsOwner(ctx, project.ID, requestingUserUID)
+	if err != nil {
+		return utils.NewInternalError("Failed to check ownership")
+	}
+	if !isOwner {
+		return utils.NewForbiddenError("Only project owners can change member access")
+	}
+
+	// Prevent changing owner's write access
+	role, _, err := s.projectRepo.GetMemberInfo(ctx, project.ID, memberUID)
+	if err != nil {
+		if err.Error() == "user is not a member of this project" {
+			return utils.NewNotFoundError("Member not found in project")
+		}
+		return utils.NewInternalError("Failed to get member info")
+	}
+
+	if role == "owner" {
+		return utils.NewBadRequestError("Cannot change write access for project owners")
+	}
+
+	// Update the member write access
+	err = s.projectRepo.UpdateMemberWriteAccess(ctx, project.ID, memberUID, canWrite)
+	if err != nil {
+		return utils.NewInternalError("Failed to update member write access")
+	}
+
+	return nil
 }

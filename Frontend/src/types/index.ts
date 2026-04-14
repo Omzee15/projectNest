@@ -31,6 +31,8 @@ export interface Project {
   updated_at?: string;
   updated_by?: string;
   is_active: boolean;
+  can_write?: boolean;
+  role?: string;
 }
 
 export interface List {

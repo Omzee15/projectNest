@@ -177,6 +177,13 @@ class ApiService {
     });
   }
 
+  async updateMemberWriteAccess(projectId: string, memberUid: string, canWrite: boolean): Promise<ApiResponse<any>> {
+    return this.request(`/projects/${projectId}/members/${memberUid}/write-access`, {
+      method: 'PUT',
+      body: JSON.stringify({ can_write: canWrite }),
+    });
+  }
+
   async searchUsers(query: string, projectId?: string): Promise<ApiResponse<UserSearchResult[]>> {
     const params = new URLSearchParams();
     if (query) params.set('q', query);

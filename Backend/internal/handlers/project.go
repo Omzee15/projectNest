@@ -570,6 +570,99 @@ func (h *ProjectHandler) GetProjectMembers(c *gin.Context) {
 	utils.SuccessResponse(c, members, "")
 }
 
+// UpdateMemberWriteAccess handles PUT /api/projects/:uid/members/:memberUid/write-access
+func (h *ProjectHandler) UpdateMemberWriteAccess(c *gin.Context) {
+	projectUIDParam := c.Param("uid")
+	memberUIDParam := c.Param("memberUid")
+
+	logger.WithComponent("project-handler").
+		WithFields(map[string]interface{}{
+			"project_uid": projectUIDParam,
+			"member_uid":  memberUIDParam,
+		}).
+		Info("Updating member write access")
+
+	projectUID, err := uuid.Parse(projectUIDParam)
+	if err != nil {
+		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid project UID")
+		return
+	}
+
+	memberUID, err := uuid.Parse(memberUIDParam)
+	if err != nil {
+		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid member UID")
+		return
+	}
+
+	// Extract user information from authentication context
+	_, requestingUserUID, _, err := getUserFromContext(c)
+	if err != nil {
+		logger.WithComponent("project-handler").
+			WithFields(map[string]interface{}{"error": err.Error()}).
+			Error("Failed to get user from context")
+		utils.ErrorResponse(c, http.StatusUnauthorized, "Authentication required")
+		return
+	}
+
+	type UpdateMemberAccessRequest struct {
+		CanWrite bool `json:"can_write"`
+	}
+
+	var req UpdateMemberAccessRequest
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		logger.WithComponent("project-handler").
+			WithFields(map[string]interface{}{"error": err.Error()}).
+			Error("Invalid request body")
+		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid request: "+err.Error())
+		return
+	}
+
+	err = h.projectService.UpdateMemberWriteAccess(c.Request.Context(), projectUID, memberUID, req.CanWrite, requestingUserUID)
+	if err != nil {
+		logger.WithComponent("project-handler").
+			WithFields(map[string]interface{}{
+				"project_uid": projectUID.String(),
+				"member_uid":  memberUID.String(),
+				"error":       err.Error(),
+			}).
+			Error("Failed to update member write access")
+
+		if err.Error() == "Project not found" {
+			utils.ErrorResponse(c, http.StatusNotFound, "Project not found")
+			return
+		}
+		if err.Error() == "Only project owners can change member access" {
+			utils.ErrorResponse(c, http.StatusForbidden, err.Error())
+			return
+		}
+		if err.Error() == "Cannot change write access for project owners" {
+			utils.ErrorResponse(c, http.StatusBadRequest, err.Error())
+			return
+		}
+		if err.Error() == "Member not found in project" {
+			utils.ErrorResponse(c, http.StatusNotFound, err.Error())
+			return
+		}
+
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to update member write access")
+		return
+	}
+
+	logger.WithComponent("project-handler").
+		WithFields(map[string]interface{}{
+			"project_uid": projectUID.String(),
+			"member_uid":  memberUID.String(),
+			"can_write":   req.CanWrite,
+		}).
+		Info("Successfully updated member write access")
+
+	utils.SuccessResponse(c, gin.H{
+		"message":   "Member write access updated successfully",
+		"can_write": req.CanWrite,
+	}, "")
+}
+
 // SearchUsers handles GET /api/users/search?q=...&project_uid=...
 func (h *ProjectHandler) SearchUsers(c *gin.Context) {
 	query := c.Query("q")

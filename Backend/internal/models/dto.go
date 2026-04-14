@@ -38,6 +38,8 @@ type ProjectResponse struct {
 	FlowchartContent *string    `json:"flowchart_content"`
 	CreatedAt        time.Time  `json:"created_at"`
 	UpdatedAt        *time.Time `json:"updated_at"`
+	CanWrite         bool       `json:"can_write"`
+	Role             string     `json:"role"`
 }
 
 type ProjectWithListsResponse struct {

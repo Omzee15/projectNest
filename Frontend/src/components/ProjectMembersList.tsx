@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
 import { Users, Crown, Loader2, PenLine, Eye } from 'lucide-react';
 import { apiService } from '@/services/api';
 import { ProjectMember } from '@/types';
@@ -21,6 +23,7 @@ interface ProjectMembersListProps {
 export function ProjectMembersList({ projectId }: ProjectMembersListProps) {
   const [members, setMembers] = useState<ProjectMember[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [updatingMemberId, setUpdatingMemberId] = useState<string | null>(null);
   const { toast } = useToast();
 
   const loadMembers = async () => {
@@ -37,6 +40,34 @@ export function ProjectMembersList({ projectId }: ProjectMembersListProps) {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleToggleWriteAccess = async (memberUid: string, currentCanWrite: boolean) => {
+    try {
+      setUpdatingMemberId(memberUid);
+      await apiService.updateMemberWriteAccess(projectId, memberUid, !currentCanWrite);
+      
+      // Update local state
+      setMembers(members.map(m => 
+        m.user_uid === memberUid 
+          ? { ...m, can_write: !currentCanWrite }
+          : m
+      ));
+      
+      const member = members.find(m => m.user_uid === memberUid);
+      toast({
+        title: 'Success',
+        description: `${member?.name} now has ${!currentCanWrite ? 'edit' : 'view-only'} access`,
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to update member access',
+        variant: 'destructive',
+      });
+    } finally {
+      setUpdatingMemberId(null);
     }
   };
 
@@ -120,56 +151,94 @@ export function ProjectMembersList({ projectId }: ProjectMembersListProps) {
       ) : (
         <TooltipProvider>
           <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
-            {members.map((member) => (
-              <div
-                key={member.user_uid}
-                className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-8 w-8">
-                    <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                      {getInitials(member.name)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <p className="font-medium text-sm">{member.name}</p>
-                      {member.role === 'owner' && (
-                        <Tooltip>
-                          <TooltipTrigger>
-                            <Crown className="h-3 w-3 text-yellow-500" />
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Project Owner</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      )}
-                      {member.can_write && member.role !== 'owner' && (
-                        <Tooltip>
-                          <TooltipTrigger>
-                            <PenLine className="h-3 w-3 text-blue-500" />
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Can Edit</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      )}
+            {members.map((member) => {
+              const currentUserUid = getCurrentUserUid();
+              const isCurrentUser = member.user_uid === currentUserUid;
+              const currentUserIsOwner = members.find(m => m.user_uid === currentUserUid)?.role === 'owner';
+              const canToggleAccess = currentUserIsOwner && member.role !== 'owner' && !isCurrentUser;
+              
+              return (
+                <div
+                  key={member.user_uid}
+                  className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors group"
+                >
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-8 w-8">
+                      <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                        {getInitials(member.name)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium text-sm">{member.name}</p>
+                        {member.role === 'owner' && (
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <Crown className="h-3 w-3 text-yellow-500" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Project Owner</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+                        {member.can_write && member.role !== 'owner' && (
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <PenLine className="h-3 w-3 text-blue-500" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Can Edit</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+                        {!member.can_write && member.role !== 'owner' && (
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <Eye className="h-3 w-3 text-gray-400" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>View Only</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground">{member.email}</p>
                     </div>
-                    <p className="text-xs text-muted-foreground">{member.email}</p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {canToggleAccess && (
+                      <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-muted-foreground">
+                                {member.can_write ? 'Can Edit' : 'View Only'}
+                              </span>
+                              <Switch
+                                checked={member.can_write}
+                                onCheckedChange={() => handleToggleWriteAccess(member.user_uid, member.can_write)}
+                                disabled={updatingMemberId === member.user_uid}
+                              />
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            Click to change access level
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                    )}
+                    <Badge variant={member.role === 'owner' ? 'default' : 'secondary'} className="text-xs">
+                      {member.role}
+                    </Badge>
+                    {member.can_write && member.role !== 'owner' && (
+                      <Badge variant="outline" className="text-xs text-blue-600 border-blue-300">
+                        Can Edit
+                      </Badge>
+                    )}
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Badge variant={member.role === 'owner' ? 'default' : 'secondary'} className="text-xs">
-                    {member.role}
-                  </Badge>
-                  {member.can_write && member.role !== 'owner' && (
-                    <Badge variant="outline" className="text-xs text-blue-600 border-blue-300">
-                      Can Edit
-                    </Badge>
-                  )}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </TooltipProvider>
       )}

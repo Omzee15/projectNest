@@ -100,6 +100,7 @@ func SetupRoutes(
 					// Project members routes
 					projectOwned.GET("/members", projectHandler.GetProjectMembers)
 					projectOwned.POST("/members", projectHandler.AddProjectMember)
+					projectOwned.PUT("/members/:memberUid/write-access", projectHandler.UpdateMemberWriteAccess)
 
 					// Phase 3: Canvas routes (require project ownership)
 					projectOwned.GET("/canvas", canvasHandler.GetCanvas)
