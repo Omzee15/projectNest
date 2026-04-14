@@ -61,3 +61,11 @@ func NewConflictError(message string) *AppError {
 		Message:    message,
 	}
 }
+
+func NewForbiddenError(message string) *AppError {
+	return &AppError{
+		Err:        ErrForbidden,
+		StatusCode: http.StatusForbidden,
+		Message:    message,
+	}
+}

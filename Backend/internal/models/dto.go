@@ -329,11 +329,18 @@ type ChatConversationWithMessagesResponse struct {
 }
 
 // Project Member DTOs
+type AddProjectMemberRequest struct {
+	Email    string `json:"email" binding:"required,email"`
+	Role     string `json:"role"`
+	CanWrite *bool  `json:"can_write"` // Optional: only owners can set this to true
+}
+
 type ProjectMemberResponse struct {
 	UserUID  uuid.UUID `json:"user_uid"`
 	Email    string    `json:"email"`
 	Name     string    `json:"name"`
 	Role     string    `json:"role"`
+	CanWrite bool      `json:"can_write"`
 	JoinedAt time.Time `json:"joined_at"`
 }
 

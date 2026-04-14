@@ -170,10 +170,10 @@ class ApiService {
     return this.request(`/projects/${projectId}/members`);
   }
 
-  async addProjectMember(projectId: string, email: string, role: string = 'member'): Promise<ApiResponse<any>> {
+  async addProjectMember(projectId: string, email: string, role: string = 'member', canWrite: boolean = false): Promise<ApiResponse<any>> {
     return this.request(`/projects/${projectId}/members`, {
       method: 'POST',
-      body: JSON.stringify({ email, role }),
+      body: JSON.stringify({ email, role, can_write: canWrite }),
     });
   }
 

@@ -96,6 +96,7 @@ export interface ProjectMember {
   email: string;
   name: string;
   role: string;
+  can_write: boolean;
   joined_at: string;
 }
 

@@ -445,10 +445,17 @@ func (h *ProjectHandler) AddProjectMember(c *gin.Context) {
 		return
 	}
 
-	var req struct {
-		Email string `json:"email" binding:"required,email"`
-		Role  string `json:"role"`
+	// Extract requesting user information from authentication context
+	_, requestingUserUID, _, err := getUserFromContext(c)
+	if err != nil {
+		logger.WithComponent("project-handler").
+			WithFields(map[string]interface{}{"error": err.Error()}).
+			Error("Failed to get user from context")
+		utils.ErrorResponse(c, http.StatusUnauthorized, "Authentication required")
+		return
 	}
+
+	var req models.AddProjectMemberRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.WithComponent("project-handler").
@@ -469,7 +476,18 @@ func (h *ProjectHandler) AddProjectMember(c *gin.Context) {
 		return
 	}
 
-	err = h.projectService.AddMemberByEmail(c.Request.Context(), projectUID, req.Email, req.Role)
+	// Set default canWrite to false if not specified
+	canWrite := false
+	if req.CanWrite != nil {
+		canWrite = *req.CanWrite
+	}
+
+	// Owners always have write access
+	if req.Role == "owner" {
+		canWrite = true
+	}
+
+	err = h.projectService.AddMemberByEmail(c.Request.Context(), projectUID, req.Email, req.Role, canWrite, requestingUserUID)
 	if err != nil {
 		logger.WithComponent("project-handler").
 			WithFields(map[string]interface{}{
@@ -487,6 +505,10 @@ func (h *ProjectHandler) AddProjectMember(c *gin.Context) {
 			utils.ErrorResponse(c, http.StatusConflict, "User is already a member of this project")
 			return
 		}
+		if err.Error() == "Only project owners can grant write access" {
+			utils.ErrorResponse(c, http.StatusForbidden, err.Error())
+			return
+		}
 
 		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to add member to project")
 		return
@@ -497,13 +519,15 @@ func (h *ProjectHandler) AddProjectMember(c *gin.Context) {
 			"project_uid": projectUID.String(),
 			"email":       req.Email,
 			"role":        req.Role,
+			"can_write":   canWrite,
 		}).
 		Info("Successfully added member to project")
 
 	utils.SuccessResponse(c, gin.H{
-		"message": "Member added successfully",
-		"email":   req.Email,
-		"role":    req.Role,
+		"message":   "Member added successfully",
+		"email":     req.Email,
+		"role":      req.Role,
+		"can_write": canWrite,
 	}, "Member added successfully")
 }
 

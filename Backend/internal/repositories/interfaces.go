@@ -18,17 +18,21 @@ type ProjectRepository interface {
 	Update(ctx context.Context, uid uuid.UUID, project *models.Project) error
 	PartialUpdate(ctx context.Context, uid uuid.UUID, updates models.ProjectUpdateRequest) error
 	Delete(ctx context.Context, uid uuid.UUID) error
-	AddMember(ctx context.Context, projectID int, userUID uuid.UUID, role string) error
+	AddMember(ctx context.Context, projectID int, userUID uuid.UUID, role string, canWrite bool) error
 	GetMembers(ctx context.Context, projectID int) ([]models.ProjectMember, error)
 	IsMember(ctx context.Context, projectID int, userUID uuid.UUID) (bool, error)
+	GetMemberRole(ctx context.Context, projectID int, userUID uuid.UUID) (string, error)
+	IsOwner(ctx context.Context, projectID int, userUID uuid.UUID) (bool, error)
 }
 
 // ProjectMemberRepository defines the interface for project member operations
 type ProjectMemberRepository interface {
-	AddMember(ctx context.Context, projectID int, userUID uuid.UUID, role string) error
+	AddMember(ctx context.Context, projectID int, userUID uuid.UUID, role string, canWrite bool) error
 	RemoveMember(ctx context.Context, projectID int, userUID uuid.UUID) error
 	GetMembersByProjectID(ctx context.Context, projectID int) ([]models.ProjectMember, error)
 	IsMember(ctx context.Context, projectID int, userUID uuid.UUID) (bool, error)
+	GetMemberRole(ctx context.Context, projectID int, userUID uuid.UUID) (string, error)
+	IsOwner(ctx context.Context, projectID int, userUID uuid.UUID) (bool, error)
 }
 
 // ListRepository defines the interface for list data operations

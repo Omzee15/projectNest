@@ -400,7 +400,7 @@ func (r *projectRepository) Delete(ctx context.Context, uid uuid.UUID) error {
 	return nil
 }
 
-func (r *projectRepository) AddMember(ctx context.Context, projectID int, userUID uuid.UUID, role string) error {
+func (r *projectRepository) AddMember(ctx context.Context, projectID int, userUID uuid.UUID, role string, canWrite bool) error {
 	// Get user by UUID to get the integer ID
 	user, err := r.userRepo.GetByUID(ctx, userUID)
 	if err != nil {
@@ -410,11 +410,16 @@ func (r *projectRepository) AddMember(ctx context.Context, projectID int, userUI
 		return fmt.Errorf("user not found")
 	}
 
-	query := `
-		INSERT INTO project_member (project_id, user_id, role)
-		VALUES ($1, $2, $3)`
+	// Owners always have write access
+	if role == "owner" {
+		canWrite = true
+	}
 
-	_, err = r.db.Exec(ctx, query, projectID, user.ID, role)
+	query := `
+		INSERT INTO project_member (project_id, user_id, role, can_write)
+		VALUES ($1, $2, $3, $4)`
+
+	_, err = r.db.Exec(ctx, query, projectID, user.ID, role, canWrite)
 	if err != nil {
 		return fmt.Errorf("failed to add project member: %w", err)
 	}
@@ -468,7 +473,7 @@ func safeTimeDeref(t *time.Time) time.Time {
 
 func (r *projectRepository) GetMembers(ctx context.Context, projectID int) ([]models.ProjectMember, error) {
 	query := `
-		SELECT id, project_id, user_id, role, joined_at
+		SELECT id, project_id, user_id, role, can_write, joined_at
 		FROM project_member
 		WHERE project_id = $1
 		ORDER BY joined_at ASC`
@@ -482,7 +487,7 @@ func (r *projectRepository) GetMembers(ctx context.Context, projectID int) ([]mo
 	var members []models.ProjectMember
 	for rows.Next() {
 		var m models.ProjectMember
-		err := rows.Scan(&m.ID, &m.ProjectID, &m.UserID, &m.Role, &m.JoinedAt)
+		err := rows.Scan(&m.ID, &m.ProjectID, &m.UserID, &m.Role, &m.CanWrite, &m.JoinedAt)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan project member: %w", err)
 		}
@@ -516,4 +521,41 @@ func (r *projectRepository) IsMember(ctx context.Context, projectID int, userUID
 	}
 
 	return exists, nil
+}
+
+// GetMemberRole returns the role of a user in a project
+func (r *projectRepository) GetMemberRole(ctx context.Context, projectID int, userUID uuid.UUID) (string, error) {
+	// Get user by UUID to get the integer ID
+	user, err := r.userRepo.GetByUID(ctx, userUID)
+	if err != nil {
+		return "", fmt.Errorf("failed to get user: %w", err)
+	}
+	if user == nil {
+		return "", fmt.Errorf("user not found")
+	}
+
+	query := `
+		SELECT role
+		FROM project_member
+		WHERE project_id = $1 AND user_id = $2`
+
+	var role string
+	err = r.db.QueryRow(ctx, query, projectID, user.ID).Scan(&role)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return "", fmt.Errorf("user is not a member of this project")
+		}
+		return "", fmt.Errorf("failed to get member role: %w", err)
+	}
+
+	return role, nil
+}
+
+// IsOwner checks if a user is an owner of a project
+func (r *projectRepository) IsOwner(ctx context.Context, projectID int, userUID uuid.UUID) (bool, error) {
+	role, err := r.GetMemberRole(ctx, projectID, userUID)
+	if err != nil {
+		return false, err
+	}
+	return role == "owner", nil
 }

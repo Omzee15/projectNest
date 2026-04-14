@@ -100,8 +100,8 @@ func (s *ProjectService) CreateProject(ctx context.Context, req *models.ProjectR
 		return nil, utils.NewInternalError("Failed to create project")
 	}
 
-	// Add the creator as an owner in the project_member table
-	if err := s.projectRepo.AddMember(ctx, project.ID, userUID, "owner"); err != nil {
+	// Add the creator as an owner in the project_member table (owners always have write access)
+	if err := s.projectRepo.AddMember(ctx, project.ID, userUID, "owner", true); err != nil {
 		// Log the error but don't fail the project creation
 		// In a production environment, you might want to handle this more carefully
 		return nil, utils.NewInternalError("Failed to add project owner")
@@ -325,7 +325,8 @@ func (s *ProjectService) GetAllProjectsWithProgress(ctx context.Context, userID 
 }
 
 // AddMemberByEmail adds a user to a project by their email address
-func (s *ProjectService) AddMemberByEmail(ctx context.Context, projectUID uuid.UUID, email string, role string) error {
+// Only owners can grant write access to new members
+func (s *ProjectService) AddMemberByEmail(ctx context.Context, projectUID uuid.UUID, email string, role string, canWrite bool, requestingUserUID uuid.UUID) error {
 	// Get the project to get its ID
 	project, err := s.projectRepo.GetByUID(ctx, projectUID)
 	if err != nil {
@@ -333,6 +334,17 @@ func (s *ProjectService) AddMemberByEmail(ctx context.Context, projectUID uuid.U
 			return utils.NewNotFoundError("Project not found")
 		}
 		return utils.NewInternalError("Failed to get project")
+	}
+
+	// Check if the requesting user is an owner (only owners can grant write access)
+	if canWrite {
+		isOwner, err := s.projectRepo.IsOwner(ctx, project.ID, requestingUserUID)
+		if err != nil {
+			return utils.NewInternalError("Failed to check ownership")
+		}
+		if !isOwner {
+			return utils.NewForbiddenError("Only project owners can grant write access")
+		}
 	}
 
 	// Find the user by email
@@ -352,7 +364,7 @@ func (s *ProjectService) AddMemberByEmail(ctx context.Context, projectUID uuid.U
 	}
 
 	// Add the user as a member
-	err = s.projectRepo.AddMember(ctx, project.ID, user.UserUID, role)
+	err = s.projectRepo.AddMember(ctx, project.ID, user.UserUID, role, canWrite)
 	if err != nil {
 		return utils.NewInternalError("Failed to add member")
 	}
@@ -390,6 +402,7 @@ func (s *ProjectService) GetProjectMembers(ctx context.Context, projectUID uuid.
 			Email:    user.Email,
 			Name:     user.Name,
 			Role:     member.Role,
+			CanWrite: member.CanWrite,
 			JoinedAt: member.JoinedAt,
 		})
 	}

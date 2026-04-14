@@ -10,22 +10,27 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { UserPlus, Loader2, Search, Check } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { UserPlus, Loader2, Search, Check, PenLine } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { apiService } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
-import { UserSearchResult } from '@/types';
+import { UserSearchResult, ProjectMember } from '@/types';
+import { getCurrentUserUid } from '@/utils/auth';
 
 interface AddProjectMemberDialogProps {
   projectId: string;
   onMemberAdded?: () => void;
   trigger?: React.ReactNode;
+  members?: ProjectMember[];
 }
 
 export function AddProjectMemberDialog({
   projectId,
   onMemberAdded,
   trigger,
+  members = [],
 }: AddProjectMemberDialogProps) {
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -33,8 +38,15 @@ export function AddProjectMemberDialog({
   const [selectedUser, setSelectedUser] = useState<UserSearchResult | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
+  const [canWrite, setCanWrite] = useState(false);
   const { toast } = useToast();
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+
+  // Check if current user is an owner of the project
+  const currentUserUid = getCurrentUserUid();
+  const isCurrentUserOwner = members.some(
+    (member) => member.user_uid === currentUserUid && member.role === 'owner'
+  );
 
   const searchUsers = useCallback(async (query: string) => {
     try {
@@ -55,6 +67,7 @@ export function AddProjectMemberDialog({
       searchUsers('');
       setSearchQuery('');
       setSelectedUser(null);
+      setCanWrite(false);
     }
   }, [open, searchUsers]);
 
@@ -89,15 +102,18 @@ export function AddProjectMemberDialog({
 
     try {
       setIsAdding(true);
-      await apiService.addProjectMember(projectId, selectedUser.email, 'member');
+      // Only owners can grant write access
+      const grantWriteAccess = isCurrentUserOwner ? canWrite : false;
+      await apiService.addProjectMember(projectId, selectedUser.email, 'member', grantWriteAccess);
 
       toast({
         title: 'Member added!',
-        description: `${selectedUser.name} has been added to the project`,
+        description: `${selectedUser.name} has been added to the project${grantWriteAccess ? ' with edit access' : ''}`,
       });
 
       setSearchQuery('');
       setSelectedUser(null);
+      setCanWrite(false);
       setOpen(false);
 
       if (onMemberAdded) {
@@ -111,6 +127,8 @@ export function AddProjectMemberDialog({
         errorMessage = 'User not found. They need to register first.';
       } else if (error.message?.includes('already a member')) {
         errorMessage = 'This user is already a member of the project.';
+      } else if (error.message?.includes('owners can grant write access')) {
+        errorMessage = 'Only project owners can grant edit access.';
       }
 
       toast({
@@ -213,6 +231,28 @@ export function AddProjectMemberDialog({
               </div>
             )}
           </div>
+
+          {/* Write access toggle - only visible to owners */}
+          {isCurrentUserOwner && selectedUser && (
+            <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
+              <div className="flex items-center gap-2">
+                <PenLine className="h-4 w-4 text-muted-foreground" />
+                <div>
+                  <Label htmlFor="can-write" className="text-sm font-medium cursor-pointer">
+                    Can Edit
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    Allow this member to make changes to the project
+                  </p>
+                </div>
+              </div>
+              <Switch
+                id="can-write"
+                checked={canWrite}
+                onCheckedChange={setCanWrite}
+              />
+            </div>
+          )}
         </div>
         <DialogFooter>
           <Button

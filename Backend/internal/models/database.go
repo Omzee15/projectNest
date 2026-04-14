@@ -66,7 +66,8 @@ type ProjectMember struct {
 	ID        int       `db:"id" gorm:"primaryKey;column:id"`
 	ProjectID int       `db:"project_id" gorm:"column:project_id;not null"`
 	UserID    int       `db:"user_id" gorm:"column:user_id;not null"`
-	Role      string    `db:"role" gorm:"column:role;default:'member'"` // 'owner' or 'member'
+	Role      string    `db:"role" gorm:"column:role;default:'member'"`        // 'owner' or 'member'
+	CanWrite  bool      `db:"can_write" gorm:"column:can_write;default:false"` // Write access permission
 	JoinedAt  time.Time `db:"joined_at" gorm:"column:joined_at;autoCreateTime"`
 }
 

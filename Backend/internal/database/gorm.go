@@ -114,12 +114,32 @@ func AutoMigrate(db *gorm.DB) error {
 	}
 	log.Info("task_category_map table ready")
 
-	// 4. Create indexes for better performance
+	// 4. Add can_write column to project_member table if it doesn't exist
+	// This allows project owners to control write access for members
+	if err := db.Exec(`
+		DO $$
+		BEGIN
+			IF NOT EXISTS (
+				SELECT 1 FROM information_schema.columns 
+				WHERE table_name = 'project_member' AND column_name = 'can_write'
+			) THEN
+				ALTER TABLE project_member ADD COLUMN can_write BOOLEAN NOT NULL DEFAULT false;
+				-- Update existing owners to have write access
+				UPDATE project_member SET can_write = true WHERE role = 'owner';
+			END IF;
+		END $$;
+	`).Error; err != nil {
+		return fmt.Errorf("failed to add can_write column to project_member: %w", err)
+	}
+	log.Info("project_member can_write column ready")
+
+	// 5. Create indexes for better performance
 	db.Exec("CREATE INDEX IF NOT EXISTS idx_task_comment_task_id ON task_comment(task_id)")
 	db.Exec("CREATE INDEX IF NOT EXISTS idx_task_comment_created_at ON task_comment(created_at)")
 	db.Exec("CREATE INDEX IF NOT EXISTS idx_task_category_project_id ON task_category(project_id)")
 	db.Exec("CREATE INDEX IF NOT EXISTS idx_task_category_map_task_id ON task_category_map(task_id)")
 	db.Exec("CREATE INDEX IF NOT EXISTS idx_task_category_map_category_id ON task_category_map(category_id)")
+	db.Exec("CREATE INDEX IF NOT EXISTS idx_project_member_can_write ON project_member(project_id, user_id, can_write)")
 
 	log.Info("All indexes created successfully")
 	log.Info("New table migrations completed successfully")
