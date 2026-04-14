@@ -105,7 +105,13 @@ func (h *ProjectHandler) GetProject(c *gin.Context) {
 		return
 	}
 
-	project, err := h.projectService.GetProjectWithLists(c.Request.Context(), projectUID)
+	// Get user info from context for access control
+	_, userUID, _, err := getUserFromContext(c)
+	if err != nil {
+		userUID = uuid.Nil // Guest user
+	}
+
+	project, err := h.projectService.GetProjectWithListsForUser(c.Request.Context(), projectUID, userUID)
 	if err != nil {
 		logger.WithComponent("project-handler").
 			WithFields(map[string]interface{}{

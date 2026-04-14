@@ -14,6 +14,7 @@ type ProjectRepository interface {
 	GetByID(ctx context.Context, id int) (*models.Project, error)
 	GetByUID(ctx context.Context, uid uuid.UUID) (*models.Project, error)
 	GetWithLists(ctx context.Context, uid uuid.UUID) (*models.ProjectWithListsResponse, error)
+	GetWithListsForUser(ctx context.Context, uid uuid.UUID, userUID uuid.UUID) (*models.ProjectWithListsResponse, error)
 	Create(ctx context.Context, project *models.Project) error
 	Update(ctx context.Context, uid uuid.UUID, project *models.Project) error
 	PartialUpdate(ctx context.Context, uid uuid.UUID, updates models.ProjectUpdateRequest) error

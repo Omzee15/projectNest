@@ -109,6 +109,10 @@ func (r *projectRepository) GetByID(ctx context.Context, id int) (*models.Projec
 }
 
 func (r *projectRepository) GetWithLists(ctx context.Context, uid uuid.UUID) (*models.ProjectWithListsResponse, error) {
+	return r.GetWithListsForUser(ctx, uid, uuid.Nil)
+}
+
+func (r *projectRepository) GetWithListsForUser(ctx context.Context, uid uuid.UUID, userUID uuid.UUID) (*models.ProjectWithListsResponse, error) {
 	// First get the project
 	project, err := r.GetByUID(ctx, uid)
 	if err != nil {
@@ -230,6 +234,20 @@ func (r *projectRepository) GetWithLists(ctx context.Context, uid uuid.UUID) (*m
 		finalLists = append(finalLists, *listsMap[listUID])
 	}
 
+	// Initialize with defaults
+	canWrite := false
+	role := "guest"
+
+	// If userUID is provided, get their actual access level
+	if userUID != uuid.Nil {
+		memberRole, memberCanWrite, err := r.GetMemberInfo(ctx, project.ID, userUID)
+		if err == nil {
+			role = memberRole
+			canWrite = memberCanWrite
+		}
+		// If error, keep defaults
+	}
+
 	response := &models.ProjectWithListsResponse{
 		ProjectResponse: models.ProjectResponse{
 			ProjectUID:       project.ProjectUID,
@@ -245,6 +263,8 @@ func (r *projectRepository) GetWithLists(ctx context.Context, uid uuid.UUID) (*m
 			FlowchartContent: project.FlowchartContent,
 			CreatedAt:        project.CreatedAt,
 			UpdatedAt:        project.UpdatedAt,
+			CanWrite:         canWrite,
+			Role:             role,
 		},
 		Lists: finalLists,
 	}

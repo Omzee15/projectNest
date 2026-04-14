@@ -86,6 +86,19 @@ func (s *ProjectService) GetProjectWithLists(ctx context.Context, uid uuid.UUID)
 	return projectWithLists, nil
 }
 
+func (s *ProjectService) GetProjectWithListsForUser(ctx context.Context, uid uuid.UUID, userUID uuid.UUID) (*models.ProjectWithListsResponse, error) {
+	projectWithLists, err := s.projectRepo.GetWithListsForUser(ctx, uid, userUID)
+	if err != nil {
+		if err.Error() == "project not found" {
+			return nil, utils.NewNotFoundError("Project not found")
+		}
+		// Temporarily show the actual error for debugging
+		return nil, utils.NewInternalError("Failed to get project: " + err.Error())
+	}
+
+	return projectWithLists, nil
+}
+
 func (s *ProjectService) CreateProject(ctx context.Context, req *models.ProjectRequest, userID int, userUID uuid.UUID) (*models.ProjectResponse, error) {
 	// Set default color if not provided
 	color := req.Color
