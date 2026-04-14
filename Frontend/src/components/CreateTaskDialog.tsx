@@ -6,16 +6,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { ColorPicker } from '@/components/ui/color-picker';
-import { Plus, Calendar, Flag, Lock } from 'lucide-react';
+import { Plus, Calendar, Flag } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { COLORS } from '@/types';
 import { TaskAssigneeSelector } from './TaskAssigneeSelector';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
 
 interface CreateTaskDialogProps {
   listUid: string;
@@ -91,40 +85,23 @@ export function CreateTaskDialog({ listUid, listName, projectId, onTaskCreate, t
     }
   };
 
+  // Don't render anything if user doesn't have write access
+  if (!canWrite) {
+    return null;
+  }
+
   return (
-    <Dialog open={open} onOpenChange={(newOpen) => {
-      if (!canWrite && newOpen) {
-        toast({
-          title: 'Access Denied',
-          description: 'You do not have permission to create tasks. Only users with edit access can create tasks.',
-          variant: 'destructive',
-        });
-        return;
-      }
-      setOpen(newOpen);
-    }}>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {trigger || (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="w-full justify-start text-muted-foreground hover:text-foreground hover:bg-secondary"
-                  disabled={!canWrite}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add a card
-                </Button>
-              </TooltipTrigger>
-              {!canWrite && (
-                <TooltipContent>
-                  <p>You have view-only access. Only users with edit permission can create tasks.</p>
-                </TooltipContent>
-              )}
-            </Tooltip>
-          </TooltipProvider>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full justify-start text-muted-foreground hover:text-foreground hover:bg-secondary"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add a card
+          </Button>
         )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[600px] md:max-w-[650px] max-h-[85vh] overflow-y-auto bg-background border border-border">

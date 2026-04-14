@@ -59,8 +59,16 @@ export function ListColumn({
   isDragOverlay = false,
   canWrite = true
 }: ListColumnProps) {
-  const { setNodeRef: setDroppableRef } = useDroppable({
-    id: list.list_uid,
+  // Use a different ID for the droppable zone (for dropping tasks into lists)
+  // to avoid conflict with the sortable ID (for reordering lists)
+  const droppableId = `droppable-${list.list_uid}`;
+  
+  const { setNodeRef: setDroppableRef, isOver } = useDroppable({
+    id: droppableId,
+    data: {
+      type: 'list',
+      listUid: list.list_uid,
+    },
   });
   
   const {
@@ -136,9 +144,9 @@ export function ListColumn({
     }
   };
 
-  // Combine the refs for both sortable and droppable functionality
+  // Combine the refs for sortable functionality (lists can be sorted)
+  // The droppable ref is now on the task container div directly
   const combineRefs = (node: HTMLElement | null) => {
-    setDroppableRef(node);
     setSortableRef(node);
   };
 
@@ -238,7 +246,11 @@ export function ListColumn({
       </CardHeader>
 
       <CardContent className="pt-0 pb-3 space-y-3">
-        <div className="space-y-2 min-h-2">
+        <div 
+          ref={setDroppableRef}
+          className={`space-y-2 min-h-[60px] rounded-lg transition-colors ${isOver ? 'bg-primary/10 border-2 border-dashed border-primary' : ''}`}
+          data-list-uid={list.list_uid}
+        >
           <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
             {(list.tasks || []).map((task) => (
               <TaskCard
@@ -251,6 +263,12 @@ export function ListColumn({
               />
             ))}
           </SortableContext>
+          {/* Empty state drop zone placeholder */}
+          {(!list.tasks || list.tasks.length === 0) && (
+            <div className={`text-center py-4 text-muted-foreground text-sm border-2 border-dashed rounded-lg ${isOver ? 'border-primary text-primary' : 'border-transparent'}`}>
+              Drop cards here
+            </div>
+          )}
         </div>
 
         <CreateTaskDialog

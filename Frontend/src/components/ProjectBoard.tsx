@@ -34,7 +34,6 @@ import { ColorIndicator } from '@/components/ui/color-picker';
 import { ProjectWithLists, Task, ListWithTasks, Project } from '@/types';
 import { apiService } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
-import { useProjectAccess } from '@/hooks/useProjectAccess';
 
 interface ProjectBoardProps {
   project: ProjectWithLists;
@@ -70,7 +69,11 @@ export function ProjectBoard({
   const [activeList, setActiveList] = useState<ListWithTasks | null>(null);
   const [showEditProjectDialog, setShowEditProjectDialog] = useState(false);
   const { toast } = useToast();
-  const { canWrite, isOwner, loading: accessLoading } = useProjectAccess(project.project_uid);
+  
+  // Use project.can_write and project.role directly from API response
+  // Default to allowing write access unless explicitly denied (can_write === false and not owner)
+  const isOwner = project.role === 'owner';
+  const canWrite = isOwner || project.can_write !== false;
   
   // Use project.lists directly instead of local state, with fallback to empty array
   const lists = project.lists || [];
@@ -192,14 +195,36 @@ export function ProjectBoard({
       .flatMap(list => list.tasks || [])
       .find(task => task.task_uid === activeId);
     
-    if (!activeTask) return;
+    console.log('Task drag end:', {
+      activeId,
+      overId,
+      activeTask: activeTask?.task_uid,
+      listsWithUIDs: lists.map(l => ({ uid: l.list_uid, taskCount: (l.tasks || []).length })),
+    });
+    
+    if (!activeTask) {
+      console.log('No active task found, returning');
+      return;
+    }
 
-    const overList = lists.find(list => list.list_uid === overId) ||
+    // Handle droppable zone IDs (format: "droppable-{listUid}")
+    let targetListUid = overId as string;
+    if (typeof overId === 'string' && overId.startsWith('droppable-')) {
+      targetListUid = overId.replace('droppable-', '');
+    }
+
+    const overList = lists.find(list => list.list_uid === targetListUid) ||
+                    lists.find(list => list.list_uid === overId) ||
                     lists.find(list => 
                       (list.tasks || []).some(task => task.task_uid === overId)
                     );
 
-    if (!overList) return;
+    console.log('Found overList:', overList?.list_uid, overList?.name, 'targetListUid:', targetListUid);
+
+    if (!overList) {
+      console.log('No overList found, returning');
+      return;
+    }
 
     // Call the parent callback for task movement
     onTaskMove?.(activeTask.task_uid, overList.list_uid);
