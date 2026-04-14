@@ -16,6 +16,7 @@ import {
   horizontalListSortingStrategy 
 } from '@dnd-kit/sortable';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -258,6 +259,12 @@ export function ProjectBoard({
               <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
                 <ColorIndicator color={project.color || '#FFFFFF'} size="md" className="flex-shrink-0" />
                 <h1 className="text-xl sm:text-2xl font-bold text-foreground truncate">{project.name}</h1>
+                {!canWrite && (
+                  <Badge variant="outline" className="text-xs whitespace-nowrap flex-shrink-0">
+                    <Eye className="h-3 w-3 mr-1" />
+                    View Only
+                  </Badge>
+                )}
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
                 {/* Desktop: Members Button */}
