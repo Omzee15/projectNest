@@ -43,7 +43,7 @@ func (s *ProjectService) GetAllProjects(ctx context.Context, userID int) ([]mode
 		// Get member info for this project
 		role := "member"
 		canWrite := false
-		
+
 		memberRole, memberCanWrite, err := s.projectRepo.GetMemberInfo(ctx, project.ID, user.UserUID)
 		if err == nil {
 			role = memberRole
@@ -450,6 +450,7 @@ func (s *ProjectService) SearchUsers(ctx context.Context, query string, projectU
 
 	return users, nil
 }
+
 // UpdateMemberWriteAccess updates the write access for a project member
 func (s *ProjectService) UpdateMemberWriteAccess(ctx context.Context, projectUID uuid.UUID, memberUID uuid.UUID, canWrite bool, requestingUserUID uuid.UUID) error {
 	// Get the project

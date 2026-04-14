@@ -559,6 +559,7 @@ func (r *projectRepository) IsOwner(ctx context.Context, projectID int, userUID 
 	}
 	return role == "owner", nil
 }
+
 // GetMemberInfo returns the role and can_write status of a user in a project
 func (r *projectRepository) GetMemberInfo(ctx context.Context, projectID int, userUID uuid.UUID) (role string, canWrite bool, err error) {
 	// Get user by UUID to get the integer ID
