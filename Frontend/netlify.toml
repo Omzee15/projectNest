@@ -36,7 +36,14 @@
 
 # Desktop app downloads (TodoBar menu bar app)
 [[headers]]
-  for = "/downloads/*"
+  for = "/downloads/*.dmg"
+  [headers.values]
+    Content-Type = "application/x-apple-diskimage"
+    Content-Disposition = "attachment"
+    Cache-Control = "public, max-age=3600"
+
+[[headers]]
+  for = "/downloads/*.zip"
   [headers.values]
     Content-Type = "application/zip"
     Content-Disposition = "attachment"

@@ -10,10 +10,12 @@ import {
   ListChecks,
 } from 'lucide-react';
 
-// Keep in sync with the file in /public/downloads
+// Keep in sync with the files in /public/downloads
 const DOWNLOAD_VERSION = '1.0.0';
-const DOWNLOAD_FILE = `TodoBar-macOS-${DOWNLOAD_VERSION}.zip`;
-const DOWNLOAD_URL = `/downloads/${DOWNLOAD_FILE}`;
+const DMG_FILE = `TodoBar-macOS-${DOWNLOAD_VERSION}.dmg`;
+const DMG_URL = `/downloads/${DMG_FILE}`;
+const ZIP_FILE = `TodoBar-macOS-${DOWNLOAD_VERSION}.zip`;
+const ZIP_URL = `/downloads/${ZIP_FILE}`;
 
 const features = [
   {
@@ -56,15 +58,22 @@ const DownloadTodoBar = () => {
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
             <Button size="lg" asChild className="w-full sm:w-auto">
-              <a href={DOWNLOAD_URL} download>
+              <a href={DMG_URL} download>
                 <Download className="mr-2 h-4 w-4" />
-                Download for macOS
+                Download for macOS (.dmg)
               </a>
             </Button>
             <span className="text-sm text-muted-foreground">
               Universal · macOS 13 Ventura or later · v{DOWNLOAD_VERSION}
             </span>
           </div>
+          <p className="text-xs text-muted-foreground mt-3">
+            Prefer a zip?{' '}
+            <a href={ZIP_URL} download className="underline hover:text-foreground">
+              Download the .zip
+            </a>{' '}
+            instead.
+          </p>
         </div>
 
         {/* Features */}
@@ -92,14 +101,13 @@ const DownloadTodoBar = () => {
             <li className="flex gap-4">
               <StepNumber n={1} />
               <div>
-                <h3 className="font-semibold text-foreground mb-1">Download and unzip</h3>
+                <h3 className="font-semibold text-foreground mb-1">Open the disk image</h3>
                 <p className="text-muted-foreground">
-                  Click <span className="font-medium text-foreground">Download for macOS</span> above.
-                  Your browser saves{' '}
-                  <code className="px-1.5 py-0.5 rounded bg-muted text-sm">{DOWNLOAD_FILE}</code> and
-                  usually unzips it automatically into your{' '}
-                  <span className="font-medium text-foreground">Downloads</span> folder, leaving{' '}
-                  <code className="px-1.5 py-0.5 rounded bg-muted text-sm">TodoBar.app</code>.
+                  Click <span className="font-medium text-foreground">Download for macOS</span> above
+                  to get{' '}
+                  <code className="px-1.5 py-0.5 rounded bg-muted text-sm">{DMG_FILE}</code>, then
+                  double-click it in your <span className="font-medium text-foreground">Downloads</span>{' '}
+                  folder. A window opens showing the TodoBar icon and an Applications shortcut.
                 </p>
               </div>
             </li>
@@ -107,10 +115,17 @@ const DownloadTodoBar = () => {
             <li className="flex gap-4">
               <StepNumber n={2} />
               <div>
-                <h3 className="font-semibold text-foreground mb-1">Move it to Applications</h3>
+                <h3 className="font-semibold text-foreground mb-1">
+                  Drag TodoBar into Applications
+                </h3>
                 <p className="text-muted-foreground">
-                  Drag <code className="px-1.5 py-0.5 rounded bg-muted text-sm">TodoBar.app</code> into
-                  your <span className="font-medium text-foreground">Applications</span> folder.
+                  In that window, drag the{' '}
+                  <code className="px-1.5 py-0.5 rounded bg-muted text-sm">TodoBar</code> icon onto the{' '}
+                  <span className="font-medium text-foreground">Applications</span> folder next to it.
+                  When it finishes copying, close the window and eject the disk image (click the ⏏
+                  next to it in a Finder sidebar), then move{' '}
+                  <code className="px-1.5 py-0.5 rounded bg-muted text-sm">{DMG_FILE}</code> to the
+                  Trash.
                 </p>
               </div>
             </li>
@@ -128,29 +143,26 @@ const DownloadTodoBar = () => {
                   <span className="italic">
                     “Apple could not verify ‘TodoBar’ is free of malware.”
                   </span>{' '}
-                  Open the <span className="font-medium text-foreground">Terminal</span> app, paste the
-                  command below, press Return, and enter your Mac password when prompted. You only
-                  need to do this once.
+                  Open the <span className="font-medium text-foreground">Terminal</span> app (press ⌘
+                  Space, type “Terminal”, Return), paste the command below, press Return, and enter
+                  your Mac password when prompted. You only need to do this once.
                 </p>
                 <pre className="text-sm bg-background rounded-md p-3 overflow-x-auto border border-border">
                   <code>sudo xattr -rd com.apple.quarantine /Applications/TodoBar.app</code>
                 </pre>
-                <p className="text-sm text-muted-foreground mt-3">
-                  If you kept <code className="px-1.5 py-0.5 rounded bg-muted text-sm">TodoBar.app</code>{' '}
-                  somewhere other than <span className="font-medium text-foreground">Applications</span>,
-                  drag it into the Terminal window instead of typing the path.
-                </p>
               </div>
             </li>
 
             <li className="flex gap-4">
               <StepNumber n={4} />
               <div>
-                <h3 className="font-semibold text-foreground mb-1">Sign in</h3>
+                <h3 className="font-semibold text-foreground mb-1">Open it and sign in</h3>
                 <p className="text-muted-foreground">
-                  A checklist icon appears in your menu bar (top-right of the screen). Click it and
-                  sign in with the same email and password you use for ProjectNest. Your projects and
-                  lists load right away, and your session is remembered.
+                  Open <span className="font-medium text-foreground">TodoBar</span> from your
+                  Applications folder. A checklist icon appears in your menu bar (top-right of the
+                  screen). Click it and sign in with the same email and password you use for
+                  ProjectNest — your projects and lists load right away, and your session is
+                  remembered.
                 </p>
               </div>
             </li>
@@ -178,6 +190,11 @@ const DownloadTodoBar = () => {
             <ul className="space-y-2 text-muted-foreground">
               <li className="flex gap-2">
                 <CheckCircle className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                Ships as a standard drag-to-Applications disk image (.dmg). A .zip is also available
+                above.
+              </li>
+              <li className="flex gap-2">
+                <CheckCircle className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                 Works on both Apple Silicon and Intel Macs (universal build).
               </li>
               <li className="flex gap-2">
@@ -197,7 +214,7 @@ const DownloadTodoBar = () => {
 
           <div className="mt-8 text-center">
             <Button size="lg" asChild>
-              <a href={DOWNLOAD_URL} download>
+              <a href={DMG_URL} download>
                 <Download className="mr-2 h-4 w-4" />
                 Download TodoBar {DOWNLOAD_VERSION}
               </a>
