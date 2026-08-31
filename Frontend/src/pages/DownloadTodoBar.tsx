@@ -6,7 +6,6 @@ import {
   CheckCircle,
   Grid,
   Lock,
-  MousePointer,
   Terminal,
   ListChecks,
 } from 'lucide-react';
@@ -120,28 +119,27 @@ const DownloadTodoBar = () => {
               <StepNumber n={3} />
               <div>
                 <h3 className="font-semibold text-foreground mb-1 flex items-center gap-2">
-                  <MousePointer className="h-4 w-4" />
-                  First launch — approve the app
+                  <Terminal className="h-4 w-4" />
+                  Remove the quarantine flag
                 </h3>
                 <p className="text-muted-foreground mb-3">
-                  TodoBar is not distributed through the App Store, so macOS asks you to confirm it
-                  the first time. <span className="font-medium text-foreground">Right-click</span> (or
-                  Control-click){' '}
-                  <code className="px-1.5 py-0.5 rounded bg-muted text-sm mx-1">TodoBar.app</code> and
-                  choose <span className="font-medium text-foreground">Open</span>, then click{' '}
-                  <span className="font-medium text-foreground">Open</span> again in the dialog. You
-                  only need to do this once.
+                  TodoBar is not distributed through the App Store, so macOS quarantines it and shows
+                  a message like{' '}
+                  <span className="italic">
+                    “Apple could not verify ‘TodoBar’ is free of malware.”
+                  </span>{' '}
+                  Open the <span className="font-medium text-foreground">Terminal</span> app, paste the
+                  command below, press Return, and enter your Mac password when prompted. You only
+                  need to do this once.
                 </p>
-                <div className="rounded-lg border border-border bg-muted/40 p-4">
-                  <p className="text-sm text-muted-foreground mb-2 flex items-center gap-2">
-                    <Terminal className="h-4 w-4" />
-                    If macOS still says the app is “damaged” or can’t be opened, clear the quarantine
-                    flag in Terminal:
-                  </p>
-                  <pre className="text-sm bg-background rounded-md p-3 overflow-x-auto border border-border">
-                    <code>xattr -dr com.apple.quarantine /Applications/TodoBar.app</code>
-                  </pre>
-                </div>
+                <pre className="text-sm bg-background rounded-md p-3 overflow-x-auto border border-border">
+                  <code>sudo xattr -rd com.apple.quarantine /Applications/TodoBar.app</code>
+                </pre>
+                <p className="text-sm text-muted-foreground mt-3">
+                  If you kept <code className="px-1.5 py-0.5 rounded bg-muted text-sm">TodoBar.app</code>{' '}
+                  somewhere other than <span className="font-medium text-foreground">Applications</span>,
+                  drag it into the Terminal window instead of typing the path.
+                </p>
               </div>
             </li>
 
