@@ -33,3 +33,11 @@
   for = "/assets/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
+
+# Desktop app downloads (TodoBar menu bar app)
+[[headers]]
+  for = "/downloads/*"
+  [headers.values]
+    Content-Type = "application/zip"
+    Content-Disposition = "attachment"
+    Cache-Control = "public, max-age=3600"

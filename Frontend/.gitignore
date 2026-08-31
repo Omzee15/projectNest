@@ -12,6 +12,11 @@ dist
 dist-ssr
 *.local
 
+# The root .gitignore has a broad `downloads/` rule (Python leftover);
+# re-include the site's static downloads folder so the desktop app ships.
+!public/downloads/
+!public/downloads/**
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

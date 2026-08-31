@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Navbar } from '@/components/Navbar';
 import { CreateProjectDialog } from '@/components/CreateProjectDialog';
-import { ArrowRight, Users, Calendar, Zap } from 'lucide-react';
+import { ArrowRight, Users, Calendar, Zap, Download } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { isUserLoggedIn } from '@/utils/auth';
 
@@ -50,13 +50,24 @@ const Index = () => {
             A clean, intuitive project management platform inspired by Trello. 
             Create lists, manage tasks, and collaborate with your team effortlessly.
           </p>
-          <Button 
-            size="lg" 
-            onClick={handleGetStarted}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 sm:px-8 w-full sm:w-auto"
-          >
-            Get Started <ArrowRight className="ml-2 h-4 w-4" />
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+            <Button
+              size="lg"
+              onClick={handleGetStarted}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 sm:px-8 w-full sm:w-auto"
+            >
+              Get Started <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              onClick={() => navigate('/download')}
+              className="px-6 sm:px-8 w-full sm:w-auto"
+            >
+              <Download className="mr-2 h-4 w-4" />
+              Get the Menu Bar App
+            </Button>
+          </div>
         </div>
 
         {/* Features Grid */}

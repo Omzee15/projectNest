@@ -1,4 +1,7 @@
 # Netlify redirects file
 # This ensures all routes are handled by the React Router (SPA)
 
+# Serve downloadable files directly (must come before the SPA catch-all)
+/downloads/*  /downloads/:splat  200
+
 /*    /index.html   200

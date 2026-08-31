@@ -14,6 +14,7 @@ import ProjectDevAI from "./pages/ProjectDevAI";
 import DBViewer from "./pages/DBViewer";
 import { FlowchartViewer } from "./pages/FlowchartViewer";
 import Settings from "./pages/Settings";
+import DownloadTodoBar from "./pages/DownloadTodoBar";
 import NotFound from "./pages/NotFound";
 import AuthGuard from "./components/AuthGuard";
 import { ThemeProvider } from "./contexts/ThemeContext";
@@ -54,6 +55,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/download" element={<DownloadTodoBar />} />
             <Route path="/projects" element={<AuthGuard><Projects /></AuthGuard>} />
             <Route path="/settings" element={<AuthGuard><Settings /></AuthGuard>} />
             <Route path="/db-viewer" element={<AuthGuard><DBViewer /></AuthGuard>} />

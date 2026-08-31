@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Search, Plus, Bell, Settings, LogOut, User, Menu, X } from 'lucide-react';
+import { Search, Plus, Bell, Settings, LogOut, User, Menu, X, Download } from 'lucide-react';
 import { CreateProjectDialog } from './CreateProjectDialog';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
@@ -69,13 +69,22 @@ export function Navbar() {
         
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center gap-4">
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             size="sm"
             onClick={() => navigate('/projects')}
             className="text-muted-foreground hover:text-foreground"
           >
             Projects
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate('/download')}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Menu Bar App
           </Button>
         </div>
         
@@ -206,8 +215,8 @@ export function Navbar() {
       {mobileMenuOpen && isAuthenticated && (
         <div className="absolute top-14 left-0 right-0 bg-background border-b border-border md:hidden z-50">
           <div className="flex flex-col p-2">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               className="justify-start"
               onClick={() => {
                 navigate('/projects');
@@ -215,6 +224,17 @@ export function Navbar() {
               }}
             >
               Projects
+            </Button>
+            <Button
+              variant="ghost"
+              className="justify-start"
+              onClick={() => {
+                navigate('/download');
+                setMobileMenuOpen(false);
+              }}
+            >
+              <Download className="mr-2 h-4 w-4" />
+              Menu Bar App
             </Button>
             <Button 
               variant="ghost" 

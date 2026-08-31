@@ -1,0 +1,220 @@
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Navbar } from '@/components/Navbar';
+import {
+  Download,
+  CheckCircle,
+  Grid,
+  Lock,
+  MousePointer,
+  Terminal,
+  ListChecks,
+} from 'lucide-react';
+
+// Keep in sync with the file in /public/downloads
+const DOWNLOAD_VERSION = '1.0.0';
+const DOWNLOAD_FILE = `TodoBar-macOS-${DOWNLOAD_VERSION}.zip`;
+const DOWNLOAD_URL = `/downloads/${DOWNLOAD_FILE}`;
+
+const features = [
+  {
+    icon: Lock,
+    title: 'Sign in once',
+    description:
+      'Use your ProjectNest account. Your session is stored in the macOS Keychain and restored on launch.',
+  },
+  {
+    icon: Grid,
+    title: 'All your projects & lists',
+    description:
+      'Pick a project, then a list, straight from the menu bar — no need to open the web app.',
+  },
+  {
+    icon: ListChecks,
+    title: 'Add & manage tasks',
+    description:
+      'Create tasks, tick them complete, or delete them. Everything syncs with your ProjectNest workspace.',
+  },
+];
+
+const DownloadTodoBar = () => {
+  return (
+    <div className="min-h-screen bg-background">
+      <Navbar />
+
+      <main className="container mx-auto px-4 sm:px-6 py-8 sm:py-16">
+        {/* Hero */}
+        <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
+          <div className="mx-auto w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center mb-6">
+            <ListChecks className="h-7 w-7 text-primary" />
+          </div>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-4">
+            TodoBar for macOS
+          </h1>
+          <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+            A native macOS menu bar app for ProjectNest. Capture tasks into your project
+            lists in a couple of clicks, without leaving what you're doing.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+            <Button size="lg" asChild className="w-full sm:w-auto">
+              <a href={DOWNLOAD_URL} download>
+                <Download className="mr-2 h-4 w-4" />
+                Download for macOS
+              </a>
+            </Button>
+            <span className="text-sm text-muted-foreground">
+              Universal · macOS 13 Ventura or later · v{DOWNLOAD_VERSION}
+            </span>
+          </div>
+        </div>
+
+        {/* Features */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 md:gap-8 mb-12 sm:mb-16">
+          {features.map((feature, index) => (
+            <Card key={index} className="text-center">
+              <CardHeader>
+                <div className="mx-auto w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+                  <feature.icon className="h-6 w-6 text-primary" />
+                </div>
+                <CardTitle className="text-xl">{feature.title}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-base text-muted-foreground">{feature.description}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Install instructions */}
+        <div className="max-w-3xl mx-auto">
+          <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-6">How to install</h2>
+
+          <ol className="space-y-6">
+            <li className="flex gap-4">
+              <StepNumber n={1} />
+              <div>
+                <h3 className="font-semibold text-foreground mb-1">Download and unzip</h3>
+                <p className="text-muted-foreground">
+                  Click <span className="font-medium text-foreground">Download for macOS</span> above.
+                  Your browser saves{' '}
+                  <code className="px-1.5 py-0.5 rounded bg-muted text-sm">{DOWNLOAD_FILE}</code> and
+                  usually unzips it automatically into your{' '}
+                  <span className="font-medium text-foreground">Downloads</span> folder, leaving{' '}
+                  <code className="px-1.5 py-0.5 rounded bg-muted text-sm">TodoBar.app</code>.
+                </p>
+              </div>
+            </li>
+
+            <li className="flex gap-4">
+              <StepNumber n={2} />
+              <div>
+                <h3 className="font-semibold text-foreground mb-1">Move it to Applications</h3>
+                <p className="text-muted-foreground">
+                  Drag <code className="px-1.5 py-0.5 rounded bg-muted text-sm">TodoBar.app</code> into
+                  your <span className="font-medium text-foreground">Applications</span> folder.
+                </p>
+              </div>
+            </li>
+
+            <li className="flex gap-4">
+              <StepNumber n={3} />
+              <div>
+                <h3 className="font-semibold text-foreground mb-1 flex items-center gap-2">
+                  <MousePointer className="h-4 w-4" />
+                  First launch — approve the app
+                </h3>
+                <p className="text-muted-foreground mb-3">
+                  TodoBar is not distributed through the App Store, so macOS asks you to confirm it
+                  the first time. <span className="font-medium text-foreground">Right-click</span> (or
+                  Control-click){' '}
+                  <code className="px-1.5 py-0.5 rounded bg-muted text-sm mx-1">TodoBar.app</code> and
+                  choose <span className="font-medium text-foreground">Open</span>, then click{' '}
+                  <span className="font-medium text-foreground">Open</span> again in the dialog. You
+                  only need to do this once.
+                </p>
+                <div className="rounded-lg border border-border bg-muted/40 p-4">
+                  <p className="text-sm text-muted-foreground mb-2 flex items-center gap-2">
+                    <Terminal className="h-4 w-4" />
+                    If macOS still says the app is “damaged” or can’t be opened, clear the quarantine
+                    flag in Terminal:
+                  </p>
+                  <pre className="text-sm bg-background rounded-md p-3 overflow-x-auto border border-border">
+                    <code>xattr -dr com.apple.quarantine /Applications/TodoBar.app</code>
+                  </pre>
+                </div>
+              </div>
+            </li>
+
+            <li className="flex gap-4">
+              <StepNumber n={4} />
+              <div>
+                <h3 className="font-semibold text-foreground mb-1">Sign in</h3>
+                <p className="text-muted-foreground">
+                  A checklist icon appears in your menu bar (top-right of the screen). Click it and
+                  sign in with the same email and password you use for ProjectNest. Your projects and
+                  lists load right away, and your session is remembered.
+                </p>
+              </div>
+            </li>
+
+            <li className="flex gap-4">
+              <StepNumber n={5} />
+              <div>
+                <h3 className="font-semibold text-foreground mb-1">Optional — launch at login</h3>
+                <p className="text-muted-foreground">
+                  Open{' '}
+                  <span className="font-medium text-foreground">
+                    System Settings → General → Login Items
+                  </span>
+                  , click <span className="font-medium text-foreground">+</span>, and add{' '}
+                  <code className="px-1.5 py-0.5 rounded bg-muted text-sm mx-1">TodoBar.app</code> so
+                  it starts automatically.
+                </p>
+              </div>
+            </li>
+          </ol>
+
+          {/* Requirements / notes */}
+          <div className="mt-10 rounded-lg bg-muted py-6 px-6">
+            <h3 className="font-semibold text-foreground mb-3">Good to know</h3>
+            <ul className="space-y-2 text-muted-foreground">
+              <li className="flex gap-2">
+                <CheckCircle className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                Works on both Apple Silicon and Intel Macs (universal build).
+              </li>
+              <li className="flex gap-2">
+                <CheckCircle className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                Requires macOS 13 (Ventura) or later.
+              </li>
+              <li className="flex gap-2">
+                <CheckCircle className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                Runs only in the menu bar — no Dock icon and no window clutter.
+              </li>
+              <li className="flex gap-2">
+                <CheckCircle className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                Talks to the same ProjectNest backend as this website. You need a ProjectNest account.
+              </li>
+            </ul>
+          </div>
+
+          <div className="mt-8 text-center">
+            <Button size="lg" asChild>
+              <a href={DOWNLOAD_URL} download>
+                <Download className="mr-2 h-4 w-4" />
+                Download TodoBar {DOWNLOAD_VERSION}
+              </a>
+            </Button>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+};
+
+const StepNumber = ({ n }: { n: number }) => (
+  <div className="shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold text-sm">
+    {n}
+  </div>
+);
+
+export default DownloadTodoBar;
